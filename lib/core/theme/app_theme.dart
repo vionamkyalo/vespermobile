@@ -13,6 +13,7 @@ class AppTheme {
           primary: AppColors.navy,
           secondary: AppColors.cyan,
           surface: AppColors.white,
+          
         ),
       );
 }

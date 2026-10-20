@@ -8,4 +8,5 @@ class AppColors {
   static const sky = Color(0xFFBFDDFB);
   static const ink = Color(0xFF0E1B3D);
   static const white = Colors.white;
+  static const fieldBlue = Color(0xFFBBDEFB);
 }
