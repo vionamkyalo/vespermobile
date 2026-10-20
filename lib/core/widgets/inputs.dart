@@ -160,3 +160,50 @@ class _FieldShell extends StatelessWidget {
     );
   }
 }
+
+
+class PillDropdown extends StatelessWidget {
+  const PillDropdown({
+    super.key,
+    required this.current,
+    required this.items,
+    required this.onSelected,
+  });
+
+  final String current;
+  final List<String> items;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      onSelected: onSelected,
+      offset: const Offset(0, 48),
+      itemBuilder: (_) => [
+        for (final i in items) PopupMenuItem(value: i, child: Text(i)),
+      ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        decoration: BoxDecoration(
+          color: AppColors.navy,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              current,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.keyboard_arrow_down, color: Colors.white),
+          ],
+        ),
+      ),
+    );
+  }
+}

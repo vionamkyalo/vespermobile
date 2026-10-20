@@ -33,3 +33,29 @@ class PrimaryButton extends StatelessWidget {
     );
   }
 }
+
+
+class AccentButton extends StatelessWidget {
+  const AccentButton({super.key, required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.cyan,
+        foregroundColor: AppColors.navy,
+        elevation: 3,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+      ),
+    );
+  }
+}
