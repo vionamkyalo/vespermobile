@@ -73,14 +73,14 @@ void main() {
       }
     });
 
-    test('creates a sync_status index on each table', () async {
+    test('creates an is_synced index on each table', () async {
       final db = await AppDatabase.instance.database;
       final rows = await db.rawQuery(
         "SELECT name FROM sqlite_master WHERE type = 'index'",
       );
       final names = rows.map((row) => row['name']).toList();
       for (final table in tables) {
-        expect(names, contains('idx_${table}_sync_status'));
+        expect(names, contains('idx_${table}_is_synced'));
       }
     });
 
@@ -90,7 +90,7 @@ void main() {
         await db.insert(table, sampleRow('uuid-$table'));
         final rows = await db.query(table);
         expect(rows, hasLength(1));
-        expect(rows.first['sync_status'], 'pending');
+        expect(rows.first['is_synced'], 0);
         expect(rows.first['retry_count'], 0);
         expect(rows.first['synced_at'], isNull);
       }
@@ -140,6 +140,32 @@ void main() {
       final rows = await reopened.query(AppDatabase.violationsTable);
       expect(rows, hasLength(1));
       expect(rows.first['client_uuid'], 'persist');
+    });
+
+    test('rejects an is_synced value other than 0 or 1', () async {
+      final db = await AppDatabase.instance.database;
+      final row = sampleRow('bad-flag')..['is_synced'] = 2;
+      expect(
+        () => db.insert(AppDatabase.violationsTable, row),
+        throwsA(isA<DatabaseException>()),
+      );
+    });
+
+    test('stores is_synced as 1 once a form is synced', () async {
+      final db = await AppDatabase.instance.database;
+      await db.insert(AppDatabase.violationsTable, sampleRow('synced'));
+      await db.update(
+        AppDatabase.violationsTable,
+        {'is_synced': 1},
+        where: 'client_uuid = ?',
+        whereArgs: ['synced'],
+      );
+      final rows = await db.query(
+        AppDatabase.violationsTable,
+        where: 'is_synced = ?',
+        whereArgs: [1],
+      );
+      expect(rows, hasLength(1));
     });
 
     test('close marks the old connection as closed', () async {
