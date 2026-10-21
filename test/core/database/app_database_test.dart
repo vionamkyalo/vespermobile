@@ -18,7 +18,7 @@ void main() {
     'client_uuid',
     'alert_id',
     'payload',
-    'sync_status',
+    'is_synced',
     'retry_count',
     'created_at',
     'synced_at',
