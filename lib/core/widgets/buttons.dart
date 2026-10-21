@@ -18,7 +18,7 @@ class PrimaryButton extends StatelessWidget {
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.cyan,
           foregroundColor: AppColors.navy,
-          disabledBackgroundColor: AppColors.cyan.withOpacity(0.6),
+          disabledBackgroundColor: AppColors.cyan.withValues(alpha: 0.6),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
