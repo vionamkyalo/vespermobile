@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+
+import '../features/auth/auth_repository.dart';
+import '../features/forms/view_models/sign_in_view_model.dart';
 
 import '../features/auth/sign_in_screen.dart';
 import '../features/forms/catch_check_form_screen.dart';
@@ -15,8 +20,11 @@ class AppRoutes {
   static const violationForm = '/forms/violation';
   static const catchCheckForm = '/forms/catch-check';
 
-  static final Map<String, WidgetBuilder> routes = {
-    signIn: (_) => const SignInScreen(),
+    static final Map<String, WidgetBuilder> routes = {
+    signIn: (_) => ChangeNotifierProvider(
+          create: (_) => SignInViewModel(AuthRepository()),
+          child: const SignInScreen(),
+        ),
     home: (_) => const HomeShell(),
     inspectionForm: (_) => const InspectionFormScreen(),
     violationForm: (_) => const ViolationFormScreen(),
