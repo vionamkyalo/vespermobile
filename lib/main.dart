@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:insyte_mobile/core/database/app_database.dart';
+import 'package:provider/provider.dart';
 
 import 'app/app.dart';
+import 'features/auth/auth_repository.dart';
+import 'features/forms/view_models/sign_in_view_model.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  await AppDatabase.instance.database;
-  runApp(const VesperApp());
+
+  runApp(
+    ChangeNotifierProvider<SignInViewModel>(
+      create: (_) => SignInViewModel(DemoAuthRepository()),
+      child: const VesperApp(),
+    ),
+  );
 }

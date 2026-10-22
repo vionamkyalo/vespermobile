@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:insyte_mobile/core/theme/app_colors.dart';
-import 'package:insyte_mobile/features/forms/view_models/violation_form_view_model.dart';
+import '../../app/routes.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/widgets/inputs.dart';
+import '../../core/widgets/vesper_logo.dart';
+import 'view_models/violation_form_view_model.dart';
 
 class ViolationFormScreen extends StatefulWidget {
   const ViolationFormScreen({super.key});
@@ -120,44 +123,29 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Vesper',
-          style: TextStyle(
-            color: AppColors.navy,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        const VesperLogo(showText: false),
         const Spacer(),
-        PopupMenuButton<String>(
-          onSelected: (_) {},
-          itemBuilder: (context) => const [
-            PopupMenuItem(value: 'violation', child: Text('Violation')),
-            PopupMenuItem(value: 'inspection', child: Text('Inspection')),
-            PopupMenuItem(value: 'catch_check', child: Text('Catch check')),
-          ],
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.navy,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Violation',
-                  style: TextStyle(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(width: 6),
-                Icon(Icons.keyboard_arrow_down, color: AppColors.white),
-              ],
-            ),
-          ),
+        FormTypeSelector(
+          current: 'Violation',
+          onSelected: (type) {
+            switch (type) {
+              case 'Inspection':
+                Navigator.pushReplacementNamed(
+                  context,
+                  AppRoutes.inspectionForm,
+                );
+                break;
+
+              case 'Catch check':
+                Navigator.pushReplacementNamed(
+                  context,
+                  AppRoutes.catchCheckForm,
+                );
+                break;
+            }
+          },
         ),
       ],
     );
