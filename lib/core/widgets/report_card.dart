@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+
 import '../theme/app_colors.dart';
 
 class ReportItem {
   const ReportItem({
-    required this.type, 
+    required this.type,
     required this.title,
     required this.received,
     required this.officer,
@@ -70,7 +71,11 @@ class ReportCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             report.notes,
-            style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.35),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              height: 1.35,
+            ),
           ),
         ],
       ),

@@ -167,11 +167,12 @@ class _CatchCheckFormViewState extends State<_CatchCheckFormView> {
                     maxLines: 6,
                   ),
                   const SizedBox(height: 8),
-                  PrimaryButton(
-                    label: 'Submit',
-                    busy: viewModel.isSubmitting,
-                    onPressed: () => _submit(viewModel),
-                  ),
+                   PrimaryButton(
+                     label: 'Submit', 
+                     isLoading: viewModel.isSubmitting,
+                      onPressed: () => _submit(viewModel),
+                     )
+
                 ],
               ),
             ),

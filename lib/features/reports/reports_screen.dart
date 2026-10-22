@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/buttons.dart';
 import '../../core/widgets/inputs.dart';
@@ -25,8 +26,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       received: '10 Nov 2025 10.00pm',
       officer: 'Mbilizi Mwedzi',
       zone: 'Binga cluster 2',
-      notes:
-          'The total number of rigs were 120 with 30 being unregistered. All 30 rigs were impounded.',
+      notes: 'The total number of rigs were 120 with 30 being unregistered. All 30 rigs were impounded.',
     ),
     ReportItem(
       type: 'Violations',
@@ -34,17 +34,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
       received: '15 Oct 2025 10.00pm',
       officer: 'Mbilizi Mwedzi',
       zone: 'Binga cluster 2',
-      notes:
-          'The total number of rigs were 100 with 50 being unregistered. All 50 rigs were impounded.',
+      notes: 'The total number of rigs were 100 with 50 being unregistered. All 50 rigs were impounded.',
     ),
-        ReportItem(
+    ReportItem(
       type: 'Inspections',
       title: 'Inspection - Binga cluster 2',
       received: '12 Nov 2025 09.30am',
       officer: 'Mbilizi Mwedzi',
       zone: 'Binga cluster 2',
-      notes:
-          'Routine patrol. 85 rigs observed, 78 with valid licences. 7 rigs issued warnings for missing lights.',
+      notes: 'Routine patrol. 85 rigs observed, 78 with valid licences. 7 rigs issued warnings for missing lights.',
     ),
     ReportItem(
       type: 'Inspections',
@@ -52,8 +50,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       received: '02 Nov 2025 08.15pm',
       officer: 'Mbilizi Mwedzi',
       zone: 'Siavonga cluster 1',
-      notes:
-          'Night inspection. 64 rigs observed, all registered. No violations recorded.',
+      notes: 'Night inspection. 64 rigs observed, all registered. No violations recorded.',
     ),
   ];
 

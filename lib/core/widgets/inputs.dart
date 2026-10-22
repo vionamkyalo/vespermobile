@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../theme/app_colors.dart';
 
 class VesperTextField extends StatelessWidget {
@@ -126,7 +127,7 @@ class VesperDropdown extends StatelessWidget {
     return _FieldShell(
       label: label,
       child: DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         isExpanded: true,
         icon: const Icon(Icons.keyboard_arrow_down, color: Colors.black),
         dropdownColor: AppColors.fieldBlue,
@@ -179,7 +180,11 @@ class FormTypeSelector extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
-            const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 20),
+            const Icon(
+              Icons.keyboard_arrow_down,
+              color: Colors.white,
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -188,14 +193,14 @@ class FormTypeSelector extends StatelessWidget {
 }
 
 InputDecoration _decoration() => InputDecoration(
-      filled: true,
-      fillColor: AppColors.fieldBlue,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-    );
+  filled: true,
+  fillColor: AppColors.fieldBlue,
+  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+  border: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+    borderSide: BorderSide.none,
+  ),
+);
 
 class _FieldShell extends StatelessWidget {
   const _FieldShell({required this.label, required this.child});
@@ -234,8 +239,6 @@ class _FieldShell extends StatelessWidget {
     );
   }
 }
-feature/my-reports
-
 
 class PillDropdown extends StatelessWidget {
   const PillDropdown({
@@ -282,4 +285,3 @@ class PillDropdown extends StatelessWidget {
     );
   }
 }
-develop

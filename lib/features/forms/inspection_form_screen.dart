@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/widgets/buttons.dart';
 import '../../core/widgets/inputs.dart';
 import '../../core/widgets/vesper_logo.dart';
 import '../../app/routes.dart';
+import '../../../core/widgets/buttons.dart';
 
 class InspectionFormScreen extends StatefulWidget {
   const InspectionFormScreen({super.key, this.onFormTypeSelected});
@@ -143,7 +143,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                   ),
                   VesperField(label: 'Notes', controller: _notes, maxLines: 6),
                   const SizedBox(height: 8),
-                  PrimaryButton(label: 'Submit', onPressed: _submit),
+                  PrimaryButton(
+                    label: 'Submit',
+                    onPressed: () => _submit(),
+                  ),
                 ],
               ),
             ),
