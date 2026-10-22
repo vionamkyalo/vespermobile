@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../alerts/view_models/alerts_view_model.dart';
 import '../alerts/alerts_screen.dart';
 import '../profile/profile_screen.dart';
 import '../reports/reports_screen.dart';
@@ -14,13 +16,16 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
 
-  static const _tabs = [
-    AlertsScreen(),
-    ReportsScreen(),
-    _FormsTab(),
-    ProfileScreen(),
-  ];
-
+  late final List<Widget> _tabs = [
+  ChangeNotifierProvider(
+    create: (_) => AlertsViewModel(),
+    child: const AlertsScreen(),
+  ),
+  const ReportsScreen(),
+  const _FormsTab(),
+  const ProfileScreen(),
+];
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
