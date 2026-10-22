@@ -14,7 +14,7 @@ class VesperApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       home: const InspectionFormScreen(),
-      // initialRoute: AppRoutes.signIn,
+      initialRoute: AppRoutes.signIn,
       routes: AppRoutes.routes,
     );
   }

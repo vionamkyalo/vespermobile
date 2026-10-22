@@ -126,7 +126,7 @@ class VesperDropdown extends StatelessWidget {
     return _FieldShell(
       label: label,
       child: DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         isExpanded: true,
         icon: const Icon(Icons.keyboard_arrow_down, color: Colors.black),
         dropdownColor: AppColors.fieldBlue,
