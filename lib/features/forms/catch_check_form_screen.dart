@@ -1,39 +1,45 @@
 import 'package:flutter/material.dart';
-import '../../core/widgets/vesper_logo.dart';
-import '../../core/widgets/inputs.dart';
-import '../../core/widgets/buttons.dart';
-import '../../core/theme/app_colors.dart';
+import 'package:provider/provider.dart';
 
-class CatchCheckFormScreen extends StatefulWidget {
+import '../../app/routes.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/widgets/buttons.dart';
+import '../../core/widgets/inputs.dart';
+import '../../core/widgets/vesper_logo.dart';
+import 'view_models/catch_check_form_view_model.dart';
+
+class CatchCheckFormScreen extends StatelessWidget {
   const CatchCheckFormScreen({super.key});
 
   @override
-  State<CatchCheckFormScreen> createState() => _CatchCheckFormScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => CatchCheckFormViewModel(),
+      child: const _CatchCheckFormView(),
+    );
+  }
 }
 
-class _CatchCheckFormScreenState extends State<CatchCheckFormScreen> {
+class _CatchCheckFormView extends StatefulWidget {
+  const _CatchCheckFormView();
+
+  @override
+  State<_CatchCheckFormView> createState() => _CatchCheckFormViewState();
+}
+
+class _CatchCheckFormViewState extends State<_CatchCheckFormView> {
   final _formKey = GlobalKey<FormState>();
-  
-  // Controllers
   final _officerController = TextEditingController();
-  final _durationController = TextEditingController();
+  final _nightsController = TextEditingController();
   final _rigIdentifierController = TextEditingController();
   final _fishTypeController = TextEditingController();
   final _weightController = TextEditingController();
   final _notesController = TextEditingController();
 
-  // Selected values
-  String _selectedZone = 'Binga';
-  final List<String> _zones = ['Binga', 'Kariba', 'Changa', 'Mlibizi'];
-
-  // Current Form Screen Dropdown Selector State
-  String _currentForm = 'Catch';
-  final List<String> _formsList = ['Catch', 'Inspection', 'Violation'];
-
   @override
   void dispose() {
     _officerController.dispose();
-    _durationController.dispose();
+    _nightsController.dispose();
     _rigIdentifierController.dispose();
     _fishTypeController.dispose();
     _weightController.dispose();
@@ -41,141 +47,134 @@ class _CatchCheckFormScreenState extends State<CatchCheckFormScreen> {
     super.dispose();
   }
 
+  void _openForm(String type) {
+    switch (type) {
+      case 'Inspection':
+        Navigator.pushReplacementNamed(context, AppRoutes.inspectionForm);
+        break;
+
+      case 'Violation':
+        Navigator.pushReplacementNamed(context, AppRoutes.violationForm);
+        break;
+    }
+  }
+
+  Future<void> _submit(CatchCheckFormViewModel viewModel) async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final saved = await viewModel.submit(
+      officer: _officerController.text,
+      nights: _nightsController.text,
+      rigIdentifier: _rigIdentifierController.text,
+      fishType: _fishTypeController.text,
+      weightPerNight: _weightController.text,
+      notes: _notesController.text,
+    );
+
+    if (!mounted || !saved) return;
+
+    _formKey.currentState?.reset();
+    for (final controller in [
+      _officerController,
+      _nightsController,
+      _rigIdentifierController,
+      _fishTypeController,
+      _weightController,
+      _notesController,
+    ]) {
+      controller.clear();
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(viewModel.message ?? 'Saved.')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<CatchCheckFormViewModel>();
+
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const VesperLogo(height: 32),
-            
-            // Styled Dropdown to change the Form layout directly
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: AppColors.navy,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: _currentForm,
-                  dropdownColor: AppColors.navy,
-                  icon: const Padding(
-                    padding: EdgeInsets.only(left: 4.0),
-                    child: Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 18),
-                  ),
-                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                  onChanged: (String? newValue) {
-                    if (newValue != null) {
-                      setState(() => _currentForm = newValue);
-                      // Route navigation switch matching your design choices
-                      if (newValue == 'Inspection') {
-                        Navigator.pushNamed(context, '/forms/inspection');
-                      } else if (newValue == 'Violation') {
-                        Navigator.pushNamed(context, '/forms/violation');
-                      }
-                    }
-                  },
-                  items: _formsList.map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text('$value '),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Catch check Form',
-                style: TextStyle(color: AppColors.navy, fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              VesperTextField(
-                label: 'Officer',
-                controller: _officerController,
-                hint: 'Enter officer name',
-              ),
-              const SizedBox(height: 16),
-              Column(
+      body: SafeArea(
+        child: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            child: Form(
+              key: _formKey,
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Zone', style: TextStyle(color: AppColors.navy, fontSize: 13, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(color: AppColors.navy, borderRadius: BorderRadius.circular(8)),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _selectedZone,
-                        dropdownColor: AppColors.navy,
-                        icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.cyan),
-                        isExpanded: true,
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                        onChanged: (String? newValue) {
-                          if (newValue != null) {
-                            setState(() => _selectedZone = newValue);
-                          }
-                        },
-                        items: _zones.map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(value: value, child: Text(value));
-                        }).toList(),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const VesperLogo(showText: false),
+                      const Spacer(),
+                      FormTypeSelector(
+                        current: 'Catch check',
+                        onSelected: _openForm,
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Catch check Form',
+                    style: TextStyle(
+                      color: AppColors.navy,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  VesperField(
+                    label: 'Officer',
+                    controller: _officerController,
+                    validator: viewModel.validateOfficer,
+                  ),
+                  VesperDropdown(
+                    label: 'Zone',
+                    value: viewModel.zone,
+                    items: CatchCheckFormViewModel.zoneOptions,
+                    onChanged: viewModel.updateZone,
+                  ),
+                  VesperField(
+                    label: 'Catch duration (Number of nights)',
+                    controller: _nightsController,
+                    keyboardType: TextInputType.number,
+                    validator: viewModel.validateNights,
+                  ),
+                  VesperField(
+                    label: 'Rig Identifier',
+                    controller: _rigIdentifierController,
+                    validator: viewModel.validateRigIdentifier,
+                  ),
+                  VesperField(
+                    label: 'Type of fish',
+                    controller: _fishTypeController,
+                    validator: viewModel.validateFishType,
+                  ),
+                  VesperField(
+                    label: 'Catch Weight (kg per night)',
+                    controller: _weightController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    validator: viewModel.validateWeight,
+                  ),
+                  VesperField(
+                    label: 'Notes',
+                    controller: _notesController,
+                    maxLines: 6,
+                  ),
+                  const SizedBox(height: 8),
+                  PrimaryButton(
+                    label: 'Submit',
+                    busy: viewModel.isSubmitting,
+                    onPressed: () => _submit(viewModel),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              VesperTextField(
-                label: 'Catch duration (Number of nights)',
-                controller: _durationController,
-                hint: 'Enter number of nights',
-              ),
-              const SizedBox(height: 16),
-              VesperTextField(
-                label: 'Rig Identifier',
-                controller: _rigIdentifierController,
-                hint: 'Enter rig identifier',
-              ),
-              const SizedBox(height: 16),
-              VesperTextField(
-                label: 'Type of fish',
-                controller: _fishTypeController,
-                hint: 'Enter fish type',
-              ),
-              const SizedBox(height: 16),
-              VesperTextField(
-                label: 'Catch Weight( kg per night)',
-                controller: _weightController,
-                hint: 'Enter weight in kg',
-              ),
-              const SizedBox(height: 16),
-              VesperTextField(
-                label: 'Notes',
-                controller: _notesController,
-                hint: 'Add extra details here',
-              ),
-              const SizedBox(height: 32),
-              PrimaryButton(
-                label: 'Submit',
-                onPressed: () {},
-              ),
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
         ),
       ),

@@ -1,13 +1,10 @@
-import 'user.dart';
+abstract class AuthRepository {
+  Future<void> signIn(String email, String password);
+}
 
-class AuthRepository {
-  AuthRepository();
-
-  Future<User> signIn(String email, String password) async {
-   
-    return User(
-      email: email,
-      password: password,
-    ); 
+class DemoAuthRepository implements AuthRepository {
+  @override
+  Future<void> signIn(String email, String password) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
   }
 }
