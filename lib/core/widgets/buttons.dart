@@ -1,14 +1,19 @@
-import '../theme/app_colors.dart';
 import 'package:flutter/material.dart';
-class PrimaryButton extends StatelessWidget {
-  const PrimaryButton({
+import '../../core/theme/app_colors.dart';
+
+class VesperButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+  final bool isLoading;
+  final bool isSecondary;
+
+  const VesperButton({
     super.key,
     required this.label,
     required this.onPressed,
+    this.isLoading = false,
+    this.isSecondary = false,
   });
-
-  final String label;
-  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -16,24 +21,29 @@ class PrimaryButton extends StatelessWidget {
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
-        onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.navy,
-          foregroundColor: Colors.white,
-          elevation: 4,
+          backgroundColor: isSecondary ? AppColors.sky : AppColors.navy,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-        ),
+        onPressed: isLoading ? null : onPressed,
+        child: isLoading
+            ? const CircularProgressIndicator(color: Colors.white)
+            : Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
       ),
     );
   }
 }
 
+feature/my-reports
 
 class AccentButton extends StatelessWidget {
   const AccentButton({super.key, required this.label, required this.onPressed});
@@ -59,3 +69,25 @@ class AccentButton extends StatelessWidget {
     );
   }
 }
+class PrimaryButton extends StatelessWidget {
+  final String label;
+  final bool busy;
+  final VoidCallback onPressed;
+
+  const PrimaryButton({
+    super.key,
+    required this.label,
+    this.busy = false,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return VesperButton(
+      label: label,
+      isLoading: busy,
+      onPressed: onPressed,
+    );
+  }
+}
+develop

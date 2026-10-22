@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/buttons.dart';
 import '../../core/widgets/inputs.dart';
 import '../../core/widgets/vesper_logo.dart';
+import '../../app/routes.dart';
 
 class InspectionFormScreen extends StatefulWidget {
   const InspectionFormScreen({super.key, this.onFormTypeSelected});
@@ -14,7 +16,13 @@ class InspectionFormScreen extends StatefulWidget {
 }
 
 class _InspectionFormScreenState extends State<InspectionFormScreen> {
-  static const _zones = ['Binga', 'Kariba', 'Siavonga', 'Sinazongwe', 'Mlibizi'];
+  static const _zones = [
+    'Binga',
+    'Kariba',
+    'Siavonga',
+    'Sinazongwe',
+    'Mlibizi',
+  ];
 
   final _formKey = GlobalKey<FormState>();
   final _officer = TextEditingController();
@@ -44,10 +52,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       'coordinates': _coords.text.trim(),
       'notes': _notes.text.trim(),
     };
-    debugPrint('Inspection submitted: $data'); 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Inspection submitted')),
-    );
+    debugPrint('Inspection submitted: $data');
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('Inspection submitted')));
   }
 
   @override
@@ -67,11 +74,38 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const VesperLogo(),
+                    const VesperLogo(showText: false),
                       const Spacer(),
                       FormTypeSelector(
                         current: 'Inspection',
-                        onSelected: (t) => widget.onFormTypeSelected?.call(t),
+                        onSelected: (t) {
+                          if (widget.onFormTypeSelected != null) {
+                            widget.onFormTypeSelected!(t);
+                            return;
+                          }
+
+                          final type = t.toLowerCase().replaceAll(
+                            RegExp(r'[\s_-]'),
+                            '',
+                          );
+
+                          switch (type) {
+                            case 'violation':
+                              Navigator.pushReplacementNamed(
+                                context,
+                                AppRoutes.violationForm,
+                              );
+                              break;
+
+                            case 'catch':
+                            case 'catchcheck':
+                              Navigator.pushReplacementNamed(
+                                context,
+                                AppRoutes.catchCheckForm,
+                              );
+                              break;
+                          }
+                        },
                       ),
                     ],
                   ),
@@ -107,11 +141,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                     controller: _coords,
                     validator: _required,
                   ),
-                  VesperField(
-                    label: 'Notes',
-                    controller: _notes,
-                    maxLines: 6,
-                  ),
+                  VesperField(label: 'Notes', controller: _notes, maxLines: 6),
                   const SizedBox(height: 8),
                   PrimaryButton(label: 'Submit', onPressed: _submit),
                 ],
