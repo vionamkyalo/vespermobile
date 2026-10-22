@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/vesper_logo.dart';
@@ -15,25 +16,45 @@ class AlertsScreen extends StatefulWidget {
 }
 
 class _AlertsScreenState extends State<AlertsScreen> {
-  late final AlertsViewModel _viewModel = widget.viewModel ?? AlertsViewModel();
-  late final bool _ownsViewModel = widget.viewModel == null;
+  AlertsViewModel? _providedViewModel;
+  AlertsViewModel? _listenedViewModel;
+
+  AlertsViewModel get _viewModel =>
+      widget.viewModel ?? _providedViewModel ?? context.read<AlertsViewModel>();
 
   @override
-  void initState() {
-    super.initState();
-    _viewModel.addListener(_onChanged);
-  }
+void initState() {
+  super.initState();
+  _providedViewModel = widget.viewModel;
+  _providedViewModel?.addListener(_onChanged);
+  _listenedViewModel = _providedViewModel;
+}
 
-  @override
-  void dispose() {
-    _viewModel.removeListener(_onChanged);
-    if (_ownsViewModel) _viewModel.dispose();
-    super.dispose();
-  }
+@override
+void didChangeDependencies() {
+  super.didChangeDependencies();
 
-  void _onChanged() {
-    if (mounted) setState(() {});
+  if (widget.viewModel == null) {
+    final viewModel = context.read<AlertsViewModel>();
+
+    if (_listenedViewModel != viewModel) {
+      _listenedViewModel?.removeListener(_onChanged);
+      _listenedViewModel = viewModel;
+      _listenedViewModel!.addListener(_onChanged);
+    }
   }
+}
+
+@override
+void dispose() {
+  _listenedViewModel?.removeListener(_onChanged);
+  _providedViewModel?.removeListener(_onChanged);
+  super.dispose();
+}
+
+void _onChanged() {
+  if (mounted) setState(() {});
+}
 
   @override
   Widget build(BuildContext context) {
