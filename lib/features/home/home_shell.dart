@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
 import '../alerts/alerts_screen.dart';
+import '../forms/inspection_form_screen.dart';
 import '../profile/profile_screen.dart';
 import '../reports/reports_screen.dart';
 
@@ -14,99 +16,97 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
 
-  static const _tabs = [
-    AlertsScreen(),
-    ReportsScreen(),
-    _FormsTab(),
-    ProfileScreen(),
-  ];
+  void _goTo(int i) => setState(() => _index = i);
+
+  List<Widget> get _tabs => [
+        const AlertsScreen(),
+        ReportsScreen(onStartNewForm: () => _goTo(2)), // 2 = Forms tab
+        const InspectionFormScreen(),
+        const ProfileScreen(),
+      ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _index,
-        children: _tabs,
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) {
-          setState(() => _index = i);
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.notifications_outlined),
-            label: 'Alerts',
+      body: IndexedStack(index: _index, children: _tabs),
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: AppColors.cyan, width: 3)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 72,
+            child: Row(
+              children: [
+                _NavItem(
+                  label: 'Alerts',
+                  asset: 'assets/images/notification.png',
+                  selected: _index == 0,
+                  onTap: () => _goTo(0),
+                ),
+                _NavItem(
+                  label: 'Reports',
+                  asset: 'assets/images/reports_icon.png',
+                  selected: _index == 1,
+                  onTap: () => _goTo(1),
+                ),
+                _NavItem(
+                  label: 'Forms',
+                  asset: 'assets/images/forms_icon.png',
+                  selected: _index == 2,
+                  onTap: () => _goTo(2),
+                ),
+                _NavItem(
+                  label: 'Profile',
+                  asset: 'assets/images/profile.png',
+                  selected: _index == 3,
+                  onTap: () => _goTo(3),
+                ),
+              ],
+            ),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.insert_photo_outlined),
-            label: 'Reports',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.description_outlined),
-            label: 'Forms',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.account_circle_outlined),
-            label: 'Profile',
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _FormsTab extends StatelessWidget {
-  const _FormsTab();
+class _NavItem extends StatelessWidget {
+  const _NavItem({
+    required this.label,
+    required this.asset,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final String asset;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Forms')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _formTile(
-            context,
-            'Inspection report',
-            'Complete an inspection',
-            Icons.fact_check_outlined,
-            '/forms/inspection',
-          ),
-          _formTile(
-            context,
-            'Violation form',
-            'Record a violation',
-            Icons.warning_amber_outlined,
-            '/forms/violation',
-          ),
-          _formTile(
-            context,
-            'Catch check',
-            'Complete a catch check',
-            Icons.checklist_outlined,
-            '/forms/catch-check',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _formTile(
-    BuildContext context,
-    String title,
-    String subtitle,
-    IconData icon,
-    String route,
-  ) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: Icon(icon, size: 30),
-        title: Text(title),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () => Navigator.pushNamed(context, route),
+    final color = selected ? AppColors.cyan : AppColors.navy;
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ImageIcon(AssetImage(asset), color: color, size: 32),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 14,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
