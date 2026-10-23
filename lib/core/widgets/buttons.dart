@@ -1,35 +1,55 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
 
-class VesperButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onPressed;
-  final bool isLoading;
-  final bool isSecondary;
+import '../theme/app_colors.dart';
 
-  const VesperButton({
+class PrimaryButton extends StatelessWidget {
+  const PrimaryButton({
     super.key,
     required this.label,
     required this.onPressed,
+    this.busy = false,
     this.isLoading = false,
     this.isSecondary = false,
   });
 
+  final String label;
+  final VoidCallback? onPressed;
+
+  final bool busy;
+
+  final bool isLoading;
+
+  final bool isSecondary;
+
+  bool get _loading => busy || isLoading;
+
   @override
   Widget build(BuildContext context) {
+    final background = isSecondary ? AppColors.sky : AppColors.navy;
+
     return SizedBox(
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
+        onPressed: _loading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: isSecondary ? AppColors.sky : AppColors.navy,
+          backgroundColor: background,
+          disabledBackgroundColor: background.withValues(alpha: 0.6),
+          foregroundColor: Colors.white,
+          elevation: 4,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-        onPressed: isLoading ? null : onPressed,
-        child: isLoading
-            ? const CircularProgressIndicator(color: Colors.white)
+        child: _loading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
             : Text(
                 label,
                 style: const TextStyle(
@@ -43,25 +63,33 @@ class VesperButton extends StatelessWidget {
   }
 }
 
-// Temporary alias so your screens don't break
-class PrimaryButton extends StatelessWidget {
-  final String label;
-  final bool busy;
-  final VoidCallback onPressed;
-
-  const PrimaryButton({
+class AccentButton extends StatelessWidget {
+  const AccentButton({
     super.key,
     required this.label,
-    this.busy = false,
     required this.onPressed,
   });
 
+  final String label;
+  final VoidCallback? onPressed;
+
   @override
   Widget build(BuildContext context) {
-    return VesperButton(
-      label: label,
-      isLoading: busy,
+    return ElevatedButton(
       onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.cyan,
+        foregroundColor: AppColors.navy,
+        elevation: 3,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+      ),
     );
   }
 }
