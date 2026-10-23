@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../../core/theme/app_colors.dart';
+import '../alerts/view_models/alerts_view_model.dart';
 import '../alerts/alerts_screen.dart';
 import '../forms/inspection_form_screen.dart';
 import '../profile/profile_screen.dart';
@@ -16,15 +17,16 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
 
-  void _goTo(int i) => setState(() => _index = i);
-
-  List<Widget> get _tabs => [
-        const AlertsScreen(),
-        ReportsScreen(onStartNewForm: () => _goTo(2)), // 2 = Forms tab
-        const InspectionFormScreen(),
-        const ProfileScreen(),
-      ];
-
+  late final List<Widget> _tabs = [
+  ChangeNotifierProvider(
+    create: (_) => AlertsViewModel(),
+    child: const AlertsScreen(),
+  ),
+  const ReportsScreen(),
+  const _FormsTab(),
+  const ProfileScreen(),
+];
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(

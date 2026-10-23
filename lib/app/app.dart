@@ -13,8 +13,8 @@ class VesperApp extends StatelessWidget {
       title: 'Vesper',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const HomeShell(),
-      // initialRoute: AppRoutes.signIn,
+      home: const InspectionFormScreen(),
+      initialRoute: AppRoutes.signIn,
       routes: AppRoutes.routes,
     );
   }
