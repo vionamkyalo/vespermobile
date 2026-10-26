@@ -7,8 +7,6 @@ abstract class TokenStore {
   Future<void> clear();
 }
 
-/// Keeps the tokens in the phone's secure storage (Keychain / Keystore), so
-/// the officer stays signed in after closing the app.
 class SecureTokenStore implements TokenStore {
   SecureTokenStore([FlutterSecureStorage? storage])
     : _storage = storage ?? const FlutterSecureStorage();

@@ -17,8 +17,6 @@ class AppRoutes {
   static const violationForm = '/forms/violation';
   static const catchCheckForm = '/forms/catch-check';
 
-  // SignInViewModel is provided once, above the whole app, in main.dart,
-  // so the sign-in route no longer creates its own.
  static final Map<String, WidgetBuilder> routes = {
   signIn: (_) => const SignInScreen(),
   forgotPassword: (_) => const ForgotPasswordScreen(),

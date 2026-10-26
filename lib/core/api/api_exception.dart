@@ -22,12 +22,7 @@ class ApiException implements Exception {
     message: "Can't reach Vesper. Check your internet connection and try again.",
   );
 
-  /// The Vesper backend answers errors as:
-  ///   {"detail": "message", "request_id": "..."}
-  /// and validation errors (422) as:
-  ///   {"detail": "The submitted data is not valid",
-  ///    "errors": [{"loc": [...], "msg": "...", "type": "..."}],
-  ///    "request_id": "..."}
+
   factory ApiException.fromBody(int statusCode, Object? body) {
     if (body is Map<String, dynamic>) {
       final errors = body['errors'];

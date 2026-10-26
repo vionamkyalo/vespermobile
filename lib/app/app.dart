@@ -15,7 +15,7 @@ class VesperApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       navigatorKey: appNavigatorKey,
-      // The splash screen. It opens sign-in or home after 3 seconds.
+   
       home: const SessionGate(),
       initialRoute: AppRoutes.signIn,
       routes: AppRoutes.routes,
