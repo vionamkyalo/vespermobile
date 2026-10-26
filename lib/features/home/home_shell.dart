@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../alerts/view_models/alerts_view_model.dart';
 import '../alerts/alerts_screen.dart';
 import '../forms/inspection_form_screen.dart';
 import '../profile/profile_screen.dart';
@@ -15,26 +17,98 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
 
-  static const _tabs = [
-    AlertsScreen(),
-    ReportsScreen(),
-    InspectionFormScreen(),
-    ProfileScreen(),
-  ];
-
+  late final List<Widget> _tabs = [
+  ChangeNotifierProvider(
+    create: (_) => AlertsViewModel(),
+    child: const AlertsScreen(),
+  ),
+  const ReportsScreen(),
+  const _FormsTab(),
+  const ProfileScreen(),
+];
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _index, children: _tabs),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.notifications_outlined), label: 'Alerts'),
-          NavigationDestination(icon: Icon(Icons.insert_photo_outlined), label: 'Reports'),
-          NavigationDestination(icon: Icon(Icons.description_outlined), label: 'Forms'),
-          NavigationDestination(icon: Icon(Icons.account_circle_outlined), label: 'Profile'),
-        ],
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: AppColors.cyan, width: 3)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 72,
+            child: Row(
+              children: [
+                _NavItem(
+                  label: 'Alerts',
+                  asset: 'assets/images/notification.png',
+                  selected: _index == 0,
+                  onTap: () => _goTo(0),
+                ),
+                _NavItem(
+                  label: 'Reports',
+                  asset: 'assets/images/reports_icon.png',
+                  selected: _index == 1,
+                  onTap: () => _goTo(1),
+                ),
+                _NavItem(
+                  label: 'Forms',
+                  asset: 'assets/images/forms_icon.png',
+                  selected: _index == 2,
+                  onTap: () => _goTo(2),
+                ),
+                _NavItem(
+                  label: 'Profile',
+                  asset: 'assets/images/profile.png',
+                  selected: _index == 3,
+                  onTap: () => _goTo(3),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  const _NavItem({
+    required this.label,
+    required this.asset,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final String asset;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? AppColors.cyan : AppColors.navy;
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ImageIcon(AssetImage(asset), color: color, size: 32),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 14,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
