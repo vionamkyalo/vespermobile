@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-
-import '../features/auth/auth_repository.dart';
-import '../features/forms/view_models/sign_in_view_model.dart';
-
-import '../features/auth/sign_in_screen.dart';
+import '../features/auth/screens/forgot_password_screen.dart';
+import '../features/auth/screens/sign_in_screen.dart';
 import '../features/forms/catch_check_form_screen.dart';
 import '../features/forms/inspection_form_screen.dart';
 import '../features/forms/violation_form_screen.dart';
@@ -19,12 +15,13 @@ class AppRoutes {
   static const inspectionForm = '/forms/inspection';
   static const violationForm = '/forms/violation';
   static const catchCheckForm = '/forms/catch-check';
+  static const forgotPassword = '/forgot-password';
 
-    static final Map<String, WidgetBuilder> routes = {
-    signIn: (_) => ChangeNotifierProvider(
-          create: (_) => SignInViewModel(AuthRepository()),
-          child: const SignInScreen(),
-        ),
+  // SignInViewModel is provided once, above the whole app, in main.dart,
+  // so the sign-in route no longer creates its own.
+  static final Map<String, WidgetBuilder> routes = {
+    signIn: (_) => const SignInScreen(),
+    forgotPassword: (_) => const ForgotPasswordScreen(),
     home: (_) => const HomeShell(),
     inspectionForm: (_) => const InspectionFormScreen(),
     violationForm: (_) => const ViolationFormScreen(),

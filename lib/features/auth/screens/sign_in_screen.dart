@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../app/routes.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/widgets/buttons.dart';
-import '../../core/widgets/inputs.dart';
-import '../../core/widgets/vesper_logo.dart';
-import 'package:insyte_mobile/features/forms/view_models/sign_in_view_model.dart';
-
+import '../../../app/routes.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/buttons.dart';
+import '../../../core/widgets/inputs.dart';
+import '../../../core/widgets/vesper_logo.dart';
+import '../viewmodel/sign_in_view_model.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -28,26 +27,22 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
-  Future<void> _submit(SignInViewModel viewModel) async {
+  Future<void> _submit() async {
+    final viewModel = context.read<SignInViewModel>();
+    if (viewModel.busy) return;
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
 
-    final signedIn = await viewModel.signIn(_email.text, _password.text);
-    if (signedIn && mounted) {
+    final signedIn = await viewModel.signIn(_email.text.trim(), _password.text);
+    if (!mounted) return;
+    if (signedIn) {
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     }
   }
 
   void _showReset() {
-    
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reset your password'),
-        content: const Text('Ask your patrol coordinator to set a new temporary password for you.'),
-        actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('OK'))],
-      ),
-    );
+    context.read<SignInViewModel>().clearError();
+    Navigator.of(context).pushNamed(AppRoutes.forgotPassword);
   }
 
   @override
@@ -65,7 +60,10 @@ class _SignInScreenState extends State<SignInScreen> {
               const SizedBox(height: 40),
               Container(
                 padding: const EdgeInsets.fromLTRB(18, 22, 18, 22),
-                decoration: BoxDecoration(color: AppColors.sky, borderRadius: BorderRadius.circular(14)),
+                decoration: BoxDecoration(
+                  color: AppColors.sky,
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 child: Form(
                   key: _formKey,
                   child: AutofillGroup(
@@ -75,7 +73,11 @@ class _SignInScreenState extends State<SignInScreen> {
                         const Text(
                           'Sign In',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: AppColors.navy, fontSize: 24, fontWeight: FontWeight.w700),
+                          style: TextStyle(
+                            color: AppColors.navy,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         const Text(
@@ -105,11 +107,15 @@ class _SignInScreenState extends State<SignInScreen> {
                           autofillHints: const [AutofillHints.password],
                           textInputAction: TextInputAction.done,
                           validator: viewModel.validatePassword,
-                          onSubmitted: (_) => _submit(viewModel),
+                          onSubmitted: (_) => _submit(),
                           suffix: IconButton(
-                            tooltip: viewModel.passwordHidden ? 'Show password' : 'Hide password',
+                            tooltip: viewModel.passwordHidden
+                                ? 'Show password'
+                                : 'Hide password',
                             icon: Icon(
-                              viewModel.passwordHidden ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                              viewModel.passwordHidden
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
                               color: AppColors.white,
                             ),
                             onPressed: viewModel.togglePasswordVisibility,
@@ -119,17 +125,27 @@ class _SignInScreenState extends State<SignInScreen> {
                         PrimaryButton(
                           label: 'Sign in',
                           busy: viewModel.busy,
-                          onPressed: () => _submit(viewModel),
+                          onPressed: _submit,
                         ),
                         const SizedBox(height: 14),
                         Row(
                           children: [
-                            const Text('Forgot password? ', style: TextStyle(color: AppColors.navy, fontSize: 13)),
+                            const Text(
+                              'Forgot password? ',
+                              style: TextStyle(
+                                color: AppColors.navy,
+                                fontSize: 13,
+                              ),
+                            ),
                             GestureDetector(
                               onTap: _showReset,
                               child: const Text(
                                 'Reset',
-                                style: TextStyle(color: AppColors.navy, fontSize: 13, fontWeight: FontWeight.w700),
+                                style: TextStyle(
+                                  color: AppColors.navy,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                           ],
@@ -156,10 +172,17 @@ class _ErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: AppColors.navy, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: AppColors.navy,
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Text(
         message,
-        style: const TextStyle(color: AppColors.white, fontSize: 13, fontWeight: FontWeight.w600),
+        style: const TextStyle(
+          color: AppColors.white,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
