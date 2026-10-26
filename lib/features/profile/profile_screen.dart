@@ -1,69 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../app/routes.dart';
 import '../../core/theme/app_colors.dart';
 import 'models/user_profile.dart';
 import 'view_models/profile_view_model.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
-  @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
+  Future<void> _onSignOut(BuildContext context) async {
+    final viewModel = context.read<ProfileViewModel>();
+    final navigator = Navigator.of(context, rootNavigator: true);
 
-class _ProfileScreenState extends State<ProfileScreen> {
-  final _viewModel = ProfileViewModel();
+    await viewModel.signOut();
 
-  @override
-  void dispose() {
-    _viewModel.dispose();
-    super.dispose();
-  }
-
-  Future<void> _onSignOut() async {
-    await _viewModel.signOut();
-    if (!mounted) return;
-
-    Navigator.of(
-      context,
-      rootNavigator: true,
-    ).pushNamedAndRemoveUntil(AppRoutes.signIn, (_) => false);
+    navigator.pushNamedAndRemoveUntil(AppRoutes.signIn, (_) => false);
   }
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<ProfileViewModel>();
+    final user = viewModel.user;
+
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
-        child: ListenableBuilder(
-          listenable: _viewModel,
-          builder: (context, _) {
-            final user = _viewModel.user;
-
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-              children: [
-                const _Header(),
-                const SizedBox(height: 16),
-                if (user != null) ...[
-                  _UserCard(user: user),
-                  const SizedBox(height: 16),
-                  _ContactCard(user: user),
-                  const SizedBox(height: 16),
-                ],
-                _StatusCard(
-                  waitingSummary: _viewModel.waitingSummary,
-                  onManageLocation: _viewModel.manageLocation,
-                  onOpenWaiting: _viewModel.openWaitingReports,
-                ),
-                const SizedBox(height: 16),
-                const _InfoNote(),
-                const SizedBox(height: 24),
-                _SignOutButton(onPressed: _onSignOut),
-              ],
-            );
-          },
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          children: [
+            const _Header(),
+            const SizedBox(height: 16),
+            if (user != null) ...[
+              _UserCard(user: user),
+              const SizedBox(height: 16),
+              _ContactCard(user: user),
+              const SizedBox(height: 16),
+            ],
+            _StatusCard(
+              waitingSummary: viewModel.waitingSummary,
+              onManageLocation: viewModel.manageLocation,
+              onOpenWaiting: viewModel.openWaitingReports,
+            ),
+            const SizedBox(height: 16),
+            const _InfoNote(),
+            const SizedBox(height: 24),
+            _SignOutButton(onPressed: () => _onSignOut(context)),
+          ],
         ),
       ),
     );
@@ -84,11 +67,7 @@ class _Header extends StatelessWidget {
             onTap: () => Navigator.of(context).maybePop(),
             child: const Padding(
               padding: EdgeInsets.only(right: 8),
-              child: Icon(
-                Icons.chevron_left,
-                color: AppColors.navy,
-                size: 32,
-              ),
+              child: Icon(Icons.chevron_left, color: AppColors.navy, size: 32),
             ),
           ),
         const Text(
@@ -169,10 +148,7 @@ class _UserCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   user.role,
-                  style: const TextStyle(
-                    color: AppColors.white,
-                    fontSize: 16,
-                  ),
+                  style: const TextStyle(color: AppColors.white, fontSize: 16),
                 ),
               ],
             ),
@@ -194,10 +170,7 @@ class _ContactCard extends StatelessWidget {
       child: Column(
         children: [
           _InfoRow(label: 'Phone', value: user.phone),
-          Divider(
-            height: 24,
-            color: AppColors.white.withValues(alpha: 0.4),
-          ),
+          Divider(height: 24, color: AppColors.white.withValues(alpha: 0.4)),
           _InfoRow(label: 'Email', value: user.email),
         ],
       ),
@@ -256,10 +229,7 @@ class _StatusCard extends StatelessWidget {
             action: 'Manage',
             onTap: onManageLocation,
           ),
-          Divider(
-            height: 28,
-            color: AppColors.white.withValues(alpha: 0.4),
-          ),
+          Divider(height: 28, color: AppColors.white.withValues(alpha: 0.4)),
           _LinkRow(
             label: 'Reports waiting to send',
             action: 'Open',

@@ -9,6 +9,7 @@ import '../forms/catch_check_form_screen.dart';
 import '../forms/inspection_form_screen.dart';
 import '../forms/violation_form_screen.dart';
 import '../profile/profile_screen.dart';
+import '../profile/view_models/profile_view_model.dart';
 import '../reports/reports_screen.dart';
 
 class HomeShell extends StatefulWidget {
@@ -38,7 +39,10 @@ class _HomeShellState extends State<HomeShell> {
       case 2:
         return const _FormsTab();
       case 3:
-        return const ProfileScreen();
+        return ChangeNotifierProvider(
+          create: (_) => ProfileViewModel(),
+          child: const ProfileScreen(),
+        );
       default:
         throw StateError('Unknown tab index: $index');
     }
