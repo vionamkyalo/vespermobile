@@ -36,16 +36,26 @@ class _ViolationFormScreenState extends State<ViolationFormScreen> {
     FocusScope.of(context).unfocus();
 
     final submitted = await _viewModel.submit();
-    if (!mounted || !submitted) return;
+    if (!mounted) return;
+
+    if (!submitted) {
+      final message = _viewModel.errorMessage;
+      if (message != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      }
+      return;
+    }
 
     _officerController.clear();
     _violationsController.clear();
     _rigsController.clear();
     _notesController.clear();
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Violation form submitted.')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Report saved. It will sync when online.')),
+    );
   }
 
   @override
@@ -78,16 +88,26 @@ class _ViolationFormScreenState extends State<ViolationFormScreen> {
                   textCapitalization: TextCapitalization.words,
                 ),
                 const _FieldLabel('Zone'),
-                _ZoneDropdown(
+                _OptionDropdown(
                   value: _viewModel.zone,
                   options: ViolationFormViewModel.zoneOptions,
                   onChanged: _viewModel.updateZone,
+                ),
+                const _FieldLabel('Violation type'),
+                _OptionDropdown(
+                  value: _viewModel.violationType,
+                  options: ViolationFormViewModel.violationTypeOptions.keys
+                      .toList(),
+                  onChanged: _viewModel.updateViolationType,
                 ),
                 const _FieldLabel('Violations found'),
                 _FormTextField(
                   controller: _violationsController,
                   onChanged: _viewModel.updateViolationsFound,
                   errorText: _viewModel.violationsFoundError,
+                  minLines: 3,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
                 ),
                 const _FieldLabel('Rigs observed'),
                 _FormTextField(
@@ -205,6 +225,7 @@ class _FormTextField extends StatelessWidget {
     required this.onChanged,
     this.errorText,
     this.maxLines = 1,
+    this.minLines,
     this.keyboardType,
     this.inputFormatters,
     this.textCapitalization = TextCapitalization.sentences,
@@ -213,7 +234,8 @@ class _FormTextField extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final String? errorText;
-  final int maxLines;
+  final int? maxLines;
+  final int? minLines;
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
   final TextCapitalization textCapitalization;
@@ -224,6 +246,7 @@ class _FormTextField extends StatelessWidget {
       controller: controller,
       onChanged: onChanged,
       maxLines: maxLines,
+      minLines: minLines,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       textCapitalization: textCapitalization,
@@ -233,8 +256,8 @@ class _FormTextField extends StatelessWidget {
   }
 }
 
-class _ZoneDropdown extends StatelessWidget {
-  const _ZoneDropdown({
+class _OptionDropdown extends StatelessWidget {
+  const _OptionDropdown({
     required this.value,
     required this.options,
     required this.onChanged,
@@ -261,7 +284,10 @@ class _ZoneDropdown extends StatelessWidget {
           dropdownColor: AppColors.white,
           items: [
             for (final option in options)
-              DropdownMenuItem(value: option, child: Text(option)),
+              DropdownMenuItem(
+                value: option,
+                child: Text(option.replaceAll('_', ' ')),
+              ),
           ],
           onChanged: onChanged,
         ),

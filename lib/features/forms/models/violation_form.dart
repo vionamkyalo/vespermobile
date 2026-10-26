@@ -20,4 +20,21 @@ class ViolationForm {
     'rigs_observed': rigsObserved,
     'notes': notes,
   };
+
+  Map<String, dynamic> toApiPayload({
+    String? inspectionId,
+    required String violationType,
+    required DateTime recordedAt,
+  }) => {
+    if (inspectionId != null) 'inspection_id': inspectionId,
+    'violation_type': violationType,
+    'rig_identifier': rigsObserved.toString(),
+    'description': [
+      'Officer: $officer',
+      'Zone: $zone',
+      'Violations: $violationsFound',
+      if (notes.isNotEmpty) 'Notes: $notes',
+    ].join('\n'),
+    'recorded_at': recordedAt.toUtc().toIso8601String(),
+  };
 }
