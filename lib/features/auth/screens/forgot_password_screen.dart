@@ -13,7 +13,6 @@ void _notice(BuildContext context, String message) {
     ..showSnackBar(SnackBar(content: Text(message)));
 }
 
-/// Step 1: the officer enters their email and the backend emails a reset link.
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -28,7 +27,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   void initState() {
     super.initState();
-    // Drop any stale error left over from the sign-in screen.
+    
     context.read<SignInViewModel>().clearError(notify: false);
   }
 
@@ -47,16 +46,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final ok = await viewModel.forgotPassword(_email.text.trim());
     if (!mounted) return;
     if (!ok) {
-      _notice(context, viewModel.error ?? 'Could not send the reset email');
+      _notice(context, viewModel.error ?? 'Could not send the code');
       return;
     }
-    _notice(context, 'If an account exists for that email, a reset email is on its way.');
+    _notice(
+      context,
+      'If an account exists for that email, a code is on its way.',
+    );
     _openReset();
   }
 
   void _openReset() {
+    if (!_formKey.currentState!.validate()) return;
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const ResetPasswordScreen()),
+      MaterialPageRoute<void>(
+        builder: (_) => ResetPasswordScreen(email: _email.text.trim()),
+      ),
     );
   }
 
@@ -68,7 +73,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       formKey: _formKey,
       title: 'Forgot password',
       subtitle:
-          'Enter your email address and we will email you a link to reset your password.',
+          'Enter your email address and we will email you a 6-digit code to reset your password.',
       children: [
         VesperTextField(
           label: 'Email',
@@ -81,13 +86,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           onSubmitted: (_) => _send(),
         ),
         const SizedBox(height: 26),
-        PrimaryButton(label: 'Send', busy: viewModel.busy, onPressed: _send),
+        PrimaryButton(label: 'Send code', busy: viewModel.busy, onPressed: _send),
         const SizedBox(height: 14),
         Center(
           child: GestureDetector(
             onTap: _openReset,
             child: const Text(
-              'I already have a reset code',
+              'I already have a code',
               style: TextStyle(
                 color: AppColors.navy,
                 fontSize: 13,
@@ -115,10 +120,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 }
 
-/// Step 2: the officer pastes the reset code from the email and chooses a new
-/// password. The code is the long value after "token=" in the emailed link.
+
+
 class ResetPasswordScreen extends StatefulWidget {
-  const ResetPasswordScreen({super.key});
+  const ResetPasswordScreen({super.key, required this.email});
+
+  final String email;
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -126,7 +133,7 @@ class ResetPasswordScreen extends StatefulWidget {
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _token = TextEditingController();
+  final _code = TextEditingController();
   final _password = TextEditingController();
   final _confirm = TextEditingController();
 
@@ -138,7 +145,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   @override
   void dispose() {
-    _token.dispose();
+    _code.dispose();
     _password.dispose();
     _confirm.dispose();
     super.dispose();
@@ -151,7 +158,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     FocusScope.of(context).unfocus();
 
     final ok = await viewModel.resetPassword(
-      token: _token.text.trim(),
+      email: widget.email,
+      code: _code.text,
       newPassword: _password.text,
     );
     if (!mounted) return;
@@ -172,6 +180,19 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       );
   }
 
+  Future<void> _resend() async {
+    final viewModel = context.read<SignInViewModel>();
+    if (viewModel.busy) return;
+    final ok = await viewModel.forgotPassword(widget.email);
+    if (!mounted) return;
+    _notice(
+      context,
+      ok
+          ? 'A new code is on its way.'
+          : (viewModel.error ?? 'Could not send a new code'),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<SignInViewModel>();
@@ -179,15 +200,30 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     return _AuthCard(
       formKey: _formKey,
       title: 'Choose a new password',
-      subtitle:
-          'Open the reset email, copy the code after "token=" in the link, and paste it below.',
+      subtitle: 'Enter the 6-digit code we sent to ${widget.email}.',
       children: [
         VesperTextField(
-          label: 'Reset code',
-          controller: _token,
-          hint: 'Paste the code from your email',
+          label: 'Code',
+          controller: _code,
+          hint: '6-digit code',
+          keyboardType: TextInputType.number,
           textInputAction: TextInputAction.next,
-          validator: viewModel.validateResetToken,
+          validator: viewModel.validateResetCode,
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerRight,
+          child: GestureDetector(
+            onTap: viewModel.busy ? null : _resend,
+            child: const Text(
+              'Resend code',
+              style: TextStyle(
+                color: AppColors.navy,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
         ),
         const SizedBox(height: 16),
         VesperTextField(
@@ -246,7 +282,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   }
 }
 
-/// The shared page chrome (logo + sky-blue card) used by both screens.
+
 class _AuthCard extends StatelessWidget {
   const _AuthCard({
     required this.formKey,
@@ -269,7 +305,7 @@ class _AuthCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const VesperLogo(height: 34),
+              const VesperLogo(height: 34, showText: false),
               const SizedBox(height: 40),
               Container(
                 padding: const EdgeInsets.fromLTRB(18, 22, 18, 22),

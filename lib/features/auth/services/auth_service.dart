@@ -40,7 +40,8 @@ abstract class AuthService {
   Future<VesperUser> login({required String email, required String password});
   Future<void> forgotPassword(String email);
   Future<void> resetPassword({
-    required String token,
+    required String email,
+    required String code,
     required String newPassword,
   });
   Future<VesperUser> me();
@@ -64,10 +65,10 @@ class ApiAuthService implements AuthService {
     );
     await api.saveTokenPair(data as Map<String, dynamic>);
     try {
-      // Login only returns tokens, so the user comes from /users/me.
+   
       return await _loadOfficer();
     } catch (_) {
-      // Login did not finish (offline, or not an officer): leave no tokens.
+    
       await api.tokens.clear();
       rethrow;
     }
@@ -82,15 +83,21 @@ class ApiAuthService implements AuthService {
     );
   }
 
+
   @override
   Future<void> resetPassword({
-    required String token,
+    required String email,
+    required String code,
     required String newPassword,
   }) async {
     await api.post(
       '/auth/reset-password',
       auth: false,
-      body: {'token': token.trim(), 'new_password': newPassword},
+      body: {
+        'email': email.trim().toLowerCase(),
+        'code': code.trim(),
+        'new_password': newPassword,
+      },
     );
   }
 
@@ -100,13 +107,11 @@ class ApiAuthService implements AuthService {
   @override
   Future<bool> hasSession() async => (await api.tokens.readRefresh()) != null;
 
-  /// The backend has no /auth/logout endpoint, so signing out only clears the
-  /// tokens stored on the phone.
+
   @override
   Future<void> logout() => api.tokens.clear();
 
-  /// The mobile app is for patrol officers only. A coordinator who signs in
-  /// here is turned away and the tokens are removed.
+
   Future<VesperUser> _loadOfficer() async {
     final data = await api.get('/users/me');
     final user = VesperUser.fromJson(data as Map<String, dynamic>);

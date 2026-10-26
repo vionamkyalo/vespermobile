@@ -34,12 +34,14 @@ class SignInViewModel extends ChangeNotifier {
     return null;
   }
 
-  String? validateResetToken(String? value) {
-    if ((value ?? '').trim().isEmpty) return 'Paste the reset code from your email';
+
+  String? validateResetCode(String? value) {
+    final digits = (value ?? '').replaceAll(RegExp(r'\s'), '');
+    if (!RegExp(r'^\d{6}$').hasMatch(digits)) return 'Enter the 6-digit code';
     return null;
   }
 
-  /// Same rules as the backend (validate_password_strength in core/security).
+  
   String? validateNewPassword(String? value) {
     final text = value ?? '';
     if (text.isEmpty) return 'Enter a new password';
@@ -65,15 +67,17 @@ class SignInViewModel extends ChangeNotifier {
   });
 
   Future<bool> resetPassword({
-    required String token,
+    required String email,
+    required String code,
     required String newPassword,
   }) => _run(() async {
-    await _service.resetPassword(token: token, newPassword: newPassword);
+    await _service.resetPassword(
+      email: email,
+      code: code.replaceAll(RegExp(r'\s'), ''),
+      newPassword: newPassword,
+    );
   });
 
-  /// Called when the app opens. True means the officer is still signed in.
-  /// If the phone is offline the officer stays signed in too, and [user]
-  /// stays null until the next successful request.
   Future<bool> restoreSession() async {
     if (!await _service.hasSession()) return false;
     try {
@@ -94,7 +98,7 @@ class SignInViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Pass notify: false from initState, before the first build.
+
   void clearError({bool notify = true}) {
     if (_error == null) return;
     _error = null;
