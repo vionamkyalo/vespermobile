@@ -164,9 +164,7 @@ class SyncService {
         final value = decoded['detail'];
         detail = value is String ? value : jsonEncode(value);
       }
-    } on FormatException {
-      // Not JSON: keep the raw body.
-    }
+    } on FormatException {}
     return 'Server answered ${response.statusCode}: $detail';
   }
 

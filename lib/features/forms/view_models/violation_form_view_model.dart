@@ -1,21 +1,47 @@
 import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart';
 
+import '../../../core/sync/models/offline_queue_entry.dart';
+import '../../../core/sync/repositories/offline_queue_repository.dart';
 import '../models/violation_form.dart';
 
 class ViolationFormViewModel extends ChangeNotifier {
+  ViolationFormViewModel({
+    this.inspectionId,
+    OfflineQueueRepository? queue,
+    this.onQueued,
+  }) : _queue = queue ?? OfflineQueueRepository();
+
+  final String? inspectionId;
+  final OfflineQueueRepository _queue;
+  final VoidCallback? onQueued;
+
   static const List<String> zoneOptions = ['Open', 'Closed'];
+
+  static const Map<String, String> violationTypeOptions = {
+    'Unregistered rig': 'unregistered_rig',
+    'Missing permit': 'missing_permit',
+    'Fishing in closed area': 'fishing_in_closed_area',
+    'Fishing during closure': 'fishing_during_closure',
+    'Rig cap exceeded': 'rig_cap_exceeded',
+    'Unauthorized gear': 'unauthorized_gear',
+  };
 
   String _officer = '';
   String _zone = zoneOptions.first;
+  String _violationType = violationTypeOptions.keys.first;
   String _violationsFound = '';
   String _rigsObserved = '';
   String _notes = '';
 
   bool _submitAttempted = false;
   bool _isSubmitting = false;
+  String? _errorMessage;
 
   String get zone => _zone;
+  String get violationType => _violationType;
   bool get isSubmitting => _isSubmitting;
+  String? get errorMessage => _errorMessage;
 
   void updateOfficer(String value) {
     _officer = value;
@@ -25,6 +51,12 @@ class ViolationFormViewModel extends ChangeNotifier {
   void updateZone(String? value) {
     if (value == null) return;
     _zone = value;
+    notifyListeners();
+  }
+
+  void updateViolationType(String? value) {
+    if (value == null) return;
+    _violationType = value;
     notifyListeners();
   }
 
@@ -80,6 +112,7 @@ class ViolationFormViewModel extends ChangeNotifier {
       _rigsObservedProblem == null;
 
   Future<bool> submit() async {
+    if (_isSubmitting) return false;
     _submitAttempted = true;
 
     if (!_isValid) {
@@ -88,31 +121,50 @@ class ViolationFormViewModel extends ChangeNotifier {
     }
 
     _isSubmitting = true;
+    _errorMessage = null;
     notifyListeners();
 
-    final form = ViolationForm(
-      officer: _officer.trim(),
-      zone: _zone,
-      violationsFound: _violationsFound.trim(),
-      rigsObserved: int.parse(_rigsObserved.trim()),
-      notes: _notes.trim(),
-    );
+    try {
+      final form = ViolationForm(
+        officer: _officer.trim(),
+        zone: _zone,
+        violationsFound: _violationsFound.trim(),
+        rigsObserved: int.parse(_rigsObserved.trim()),
+        notes: _notes.trim(),
+      );
 
-    debugPrint('Violation form submitted: ${form.toJson()}');
-    await Future<void>.delayed(const Duration(milliseconds: 500));
+      await _queue.add(
+        recordType: RecordType.violationReport,
+        recordId: const Uuid().v4(),
+        payload: form.toApiPayload(
+          inspectionId: inspectionId,
+          violationType: violationTypeOptions[_violationType]!,
+          recordedAt: DateTime.now(),
+        ),
+      );
 
-    _reset();
-    return true;
+      onQueued?.call();
+      _reset();
+      return true;
+    } catch (e) {
+      debugPrint('Failed to queue violation report: $e');
+      _errorMessage = 'Could not save the report. Please try again.';
+      _isSubmitting = false;
+      notifyListeners();
+      return false;
+    }
   }
 
   void _reset() {
     _officer = '';
     _zone = zoneOptions.first;
+    _violationType = violationTypeOptions.keys.first;
     _violationsFound = '';
     _rigsObserved = '';
     _notes = '';
     _submitAttempted = false;
     _isSubmitting = false;
+    _errorMessage = null;
     notifyListeners();
   }
 }
