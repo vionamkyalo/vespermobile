@@ -1,7 +1,7 @@
 class ApiConfig {
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://127.0.0.1:8000/api',
+    defaultValue: 'https://relive-mummified-jovial.ngrok-free.dev/api',
   );
 
   static const Duration timeout = Duration(seconds: 30);

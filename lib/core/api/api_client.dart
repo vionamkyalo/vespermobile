@@ -74,7 +74,7 @@ class ApiClient {
       if (access != null) request.headers['Authorization'] = 'Bearer $access';
     }
 
-    final http.Response response;
+        final http.Response response;
     try {
       final streamed = await _http.send(request).timeout(ApiConfig.timeout);
       response = await http.Response.fromStream(streamed);
@@ -82,7 +82,13 @@ class ApiClient {
       throw ApiException.network();
     } on http.ClientException {
       throw ApiException.network();
+       } catch (e, stacktrace) {
+      print("🚨 CRITICAL FLUTTER NET ERROR: $e");
+      print("📋 STACKTRACE: $stacktrace");
+      throw ApiException.network();
     }
+
+
 
     if (response.statusCode == 401 && auth && !retried) {
       if (await _refreshTokens()) {
@@ -158,6 +164,7 @@ class ApiClient {
     }
     return ok;
   }
+  
 
   /// The Vesper login/refresh response is
   /// {"access_token": "...", "refresh_token": "...", "token_type": "bearer"}.
