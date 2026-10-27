@@ -5,6 +5,7 @@ import '../../app/routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../alerts/alerts_screen.dart';
 import '../alerts/view_models/alerts_view_model.dart';
+import '../auth/viewmodel/sign_in_view_model.dart';
 import '../forms/catch_check_form_screen.dart';
 import '../forms/inspection_form_screen.dart';
 import '../forms/violation_form_screen.dart';
@@ -194,10 +195,26 @@ class _NavItem extends StatelessWidget {
 class _FormsTab extends StatelessWidget {
   const _FormsTab();
 
+  Future<void> _logout(BuildContext context) async {
+    final viewModel = context.read<SignInViewModel>();
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
+    await viewModel.logout();
+    rootNavigator.pushNamedAndRemoveUntil(AppRoutes.signIn, (route) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Forms')),
+      appBar: AppBar(
+        title: const Text('Forms'),
+        actions: [
+          IconButton(
+            tooltip: 'Log out',
+            icon: const Icon(Icons.logout),
+            onPressed: () => _logout(context),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [

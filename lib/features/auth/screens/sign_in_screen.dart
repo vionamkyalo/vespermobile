@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../app/routes.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/widgets/buttons.dart';
-import '../../core/widgets/inputs.dart';
-import '../../core/widgets/vesper_logo.dart';
-
-import 'package:insyte_mobile/features/forms/view_models/sign_in_view_model.dart';
+import '../../../app/routes.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/buttons.dart';
+import '../../../core/widgets/inputs.dart';
+import '../../../core/widgets/vesper_logo.dart';
+import '../viewmodel/sign_in_view_model.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -28,17 +27,21 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
-  Future<void> _submit(SignInViewModel viewModel) async {
+  Future<void> _submit() async {
+    final viewModel = context.read<SignInViewModel>();
+    if (viewModel.busy) return;
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
 
-    final signedIn = await viewModel.signIn(_email.text, _password.text);
-    if (signedIn && mounted) {
+    final signedIn = await viewModel.signIn(_email.text.trim(), _password.text);
+    if (!mounted) return;
+    if (signedIn) {
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     }
   }
 
   void _showReset() {
+    context.read<SignInViewModel>().clearError();
     Navigator.of(context).pushNamed(AppRoutes.forgotPassword);
   }
 
@@ -53,7 +56,7 @@ class _SignInScreenState extends State<SignInScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const VesperLogo(height: 34, showText: false),
+              const VesperLogo(height: 34),
               const SizedBox(height: 40),
               Container(
                 padding: const EdgeInsets.fromLTRB(18, 22, 18, 22),
@@ -104,7 +107,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           autofillHints: const [AutofillHints.password],
                           textInputAction: TextInputAction.done,
                           validator: viewModel.validatePassword,
-                          onSubmitted: (_) => _submit(viewModel),
+                          onSubmitted: (_) => _submit(),
                           suffix: IconButton(
                             tooltip: viewModel.passwordHidden
                                 ? 'Show password'
@@ -122,7 +125,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         PrimaryButton(
                           label: 'Sign in',
                           busy: viewModel.busy,
-                          onPressed: () => _submit(viewModel),
+                          onPressed: _submit,
                         ),
                         const SizedBox(height: 14),
                         Row(

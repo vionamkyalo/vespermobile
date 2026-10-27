@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme/app_theme.dart';
+import '../features/auth/screens/session_gate.dart';
+import 'navigator_key.dart';
 import 'routes.dart';
 
 class VesperApp extends StatelessWidget {
@@ -12,7 +14,8 @@ class VesperApp extends StatelessWidget {
       title: 'Vesper',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      initialRoute: AppRoutes.signIn,
+      navigatorKey: appNavigatorKey,
+      home: const SessionGate(),
       routes: AppRoutes.routes,
     );
   }
