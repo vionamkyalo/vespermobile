@@ -64,6 +64,9 @@ class ApiClient {
   }) async {
     final request = http.Request(method, _uri(path, query));
     request.headers['Accept'] = 'application/json';
+    if (baseUrl.contains('ngrok')) {
+      request.headers['ngrok-skip-browser-warning'] = 'true';
+    }
     if (headers != null) request.headers.addAll(headers);
     if (body != null) {
       request.headers['Content-Type'] = 'application/json';
@@ -74,7 +77,7 @@ class ApiClient {
       if (access != null) request.headers['Authorization'] = 'Bearer $access';
     }
 
-        final http.Response response;
+    final http.Response response;
     try {
       final streamed = await _http.send(request).timeout(ApiConfig.timeout);
       response = await http.Response.fromStream(streamed);
@@ -82,13 +85,11 @@ class ApiClient {
       throw ApiException.network();
     } on http.ClientException {
       throw ApiException.network();
-       } catch (e, stacktrace) {
-      print("🚨 CRITICAL FLUTTER NET ERROR: $e");
-      print("📋 STACKTRACE: $stacktrace");
+    } catch (e, stacktrace) {
+      print("CRITICAL FLUTTER NET ERROR: $e");
+      print("STACKTRACE: $stacktrace");
       throw ApiException.network();
     }
-
-
 
     if (response.statusCode == 401 && auth && !retried) {
       if (await _refreshTokens()) {
@@ -102,8 +103,6 @@ class ApiClient {
           retried: true,
         );
       }
-      // The refresh failed only because the phone is offline: report that,
-      // and keep the officer signed in.
       if (_refreshHitNetworkError) throw ApiException.network();
     }
 
@@ -148,8 +147,6 @@ class ApiClient {
       }
     } on ApiException catch (e) {
       if (e.isNetwork) {
-        // Officers work in the field with weak signal. A dropped connection
-        // must not sign them out, so the tokens are kept.
         _refreshHitNetworkError = true;
       } else {
         rejected = true;
@@ -164,11 +161,16 @@ class ApiClient {
     }
     return ok;
   }
-  
 
-  /// The Vesper login/refresh response is
-  /// {"access_token": "...", "refresh_token": "...", "token_type": "bearer"}.
-  /// It has no "user" object, so only the two tokens are stored.
+  Future<bool> refreshSession() => _refreshTokens();
+  Future<Map<String, String>> authHeaders() async {
+    final access = await tokens.readAccess();
+    return {
+      if (baseUrl.contains('ngrok')) 'ngrok-skip-browser-warning': 'true',
+      if (access != null) 'Authorization': 'Bearer $access',
+    };
+  }
+
   Future<void> saveTokenPair(Map<String, dynamic> pair) async {
     await tokens.save(
       access: pair['access_token'] as String,
