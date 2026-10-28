@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'features/reports/reports_repository.dart';
+import 'features/reports/view_models/reports_view_model.dart';
 
 import 'app/app.dart';
 import 'app/navigator_key.dart';
@@ -32,6 +34,10 @@ void main() {
         Provider<ApiClient>.value(value: api),
         ChangeNotifierProvider<SignInViewModel>(
           create: (_) => SignInViewModel(authService),
+        ),
+        ChangeNotifierProvider<ReportsViewModel>(
+          create: (context) =>
+              ReportsViewModel(ReportsRepository(context.read<ApiClient>())),
         ),
       ],
       child: const VesperApp(),
