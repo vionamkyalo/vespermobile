@@ -29,6 +29,8 @@ class SyncService {
     required this.baseUrl,
     http.Client? client,
     Map<String, String> Function()? headers,
+    this.asyncHeaders,
+    this.refreshSession,
     this._connectivityChanges,
     this.timeout = const Duration(seconds: 20),
   }) : _client = client ?? http.Client(),
@@ -36,13 +38,16 @@ class SyncService {
        _headers = headers ?? _noHeaders;
 
   static const Map<RecordType, String> endpoints = {
-    RecordType.inspection: '/inspections/',
+    RecordType.inspection: '/inspections',
     RecordType.violationReport: '/violation-reports',
     RecordType.catchCheck: '/catch-checks',
   };
 
   final String baseUrl;
   final Duration timeout;
+  final Future<Map<String, String>> Function()? asyncHeaders;
+
+  final Future<bool> Function()? refreshSession;
 
   final OfflineQueueRepository _repository;
   final http.Client _client;
@@ -88,9 +93,14 @@ class SyncService {
 
       await _repository.markSending(entry.queueId);
 
-      final http.Response response;
+      http.Response response;
       try {
         response = await _post(path, entry);
+        if (response.statusCode == 401 && refreshSession != null) {
+          if (await refreshSession!()) {
+            response = await _post(path, entry);
+          }
+        }
       } on Exception catch (error) {
         await _repository.markFailed(
           entry.queueId,
@@ -137,14 +147,15 @@ class SyncService {
         unconfirmedInspections.contains(inspectionId);
   }
 
-  Future<http.Response> _post(String path, OfflineQueueEntry entry) {
+  Future<http.Response> _post(String path, OfflineQueueEntry entry) async {
+    final extra = asyncHeaders == null ? _headers() : await asyncHeaders!();
     return _client
         .post(
           Uri.parse('$baseUrl$path'),
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            ..._headers(),
+            ...extra,
           },
           body: jsonEncode(entry.payload),
         )

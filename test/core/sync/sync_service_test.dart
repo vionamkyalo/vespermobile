@@ -116,7 +116,7 @@ void main() {
     await serviceAnswering(created).syncNow();
 
     expect(requests.map((request) => request.url.path), [
-      '/inspections/',
+      '/inspections',
       '/violation-reports',
       '/catch-checks',
     ]);
@@ -229,7 +229,7 @@ void main() {
       (_) async => http.Response('{"detail":"invalid"}', 422),
     ).syncNow();
 
-    expect(requests.map((request) => request.url.path), ['/inspections/']);
+    expect(requests.map((request) => request.url.path), ['/inspections']);
     expect((await reload(violation))!.attemptCount, 0);
     expect((await reload(catchCheck))!.attemptCount, 0);
   });
