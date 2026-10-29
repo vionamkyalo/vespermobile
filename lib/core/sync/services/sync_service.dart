@@ -66,12 +66,15 @@ class SyncService {
 
   StreamSubscription<List<ConnectivityResult>>? _subscription;
   Future<SyncResult>? _running;
+  final Map<String, String> _serverInspectionIds = {};
 
   final _events = StreamController<SyncEvent>.broadcast();
 
   Stream<SyncEvent> get events => _events.stream;
 
   static Map<String, String> _noHeaders() => const {};
+  String resolveInspectionId(String phoneId) =>
+      _serverInspectionIds[phoneId] ?? phoneId;
 
   Future<void> start() async {
     await _repository.resetInterruptedSends();
@@ -106,18 +109,20 @@ class SyncService {
       final zoneId = entry.payload['zone_id'];
       if (zoneId is String && zoneId.startsWith('local:')) continue;
 
+      final payload = _withServerInspectionId(entry.payload);
+
       await _repository.markSending(entry.queueId);
 
       http.Response response;
       try {
-        response = await _post(path, entry);
+        response = await _post(path, payload);
         if (response.statusCode == 401 && refreshSession != null) {
           if (await refreshSession!()) {
-            response = await _post(path, entry);
+            response = await _post(path, payload);
           }
         }
       } on Exception catch (error) {
-        await _repository.markFailed(
+        await _repository.releaseUnsent(
           entry.queueId,
           'Could not reach the server: $error',
         );
@@ -136,6 +141,7 @@ class SyncService {
         await _repository.confirm(entry.queueId);
         if (entry.recordType == RecordType.inspection) {
           unconfirmedInspections.remove(entry.recordId);
+          await _rememberServerInspectionId(entry.recordId, response);
         }
         sent++;
         if (!_events.isClosed) {
@@ -165,6 +171,33 @@ class SyncService {
     );
   }
 
+  Future<void> _rememberServerInspectionId(
+    String phoneId,
+    http.Response response,
+  ) async {
+    String? serverId;
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map && decoded['inspection_id'] is String) {
+        serverId = decoded['inspection_id'] as String;
+      }
+    } on FormatException {
+      return;
+    }
+    if (serverId == null) return;
+
+    _serverInspectionIds[phoneId] = serverId;
+    await _repository.remapInspectionId(phoneId, serverId);
+  }
+
+  Map<String, dynamic> _withServerInspectionId(Map<String, dynamic> payload) {
+    final id = payload['inspection_id'];
+    if (id is! String) return payload;
+    final serverId = _serverInspectionIds[id];
+    if (serverId == null) return payload;
+    return {...payload, 'inspection_id': serverId};
+  }
+
   bool _waitsForInspection(
     OfflineQueueEntry entry,
     Set<String> unconfirmedInspections,
@@ -178,7 +211,7 @@ class SyncService {
         unconfirmedInspections.contains(inspectionId);
   }
 
-  Future<http.Response> _post(String path, OfflineQueueEntry entry) async {
+  Future<http.Response> _post(String path, Map<String, dynamic> payload) async {
     final extra = asyncHeaders == null ? _headers() : await asyncHeaders!();
     return _client
         .post(
@@ -188,7 +221,7 @@ class SyncService {
             'Accept': 'application/json',
             ...extra,
           },
-          body: jsonEncode(entry.payload),
+          body: jsonEncode(payload),
         )
         .timeout(timeout);
   }
