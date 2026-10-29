@@ -15,6 +15,7 @@ class VesperApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       navigatorKey: appNavigatorKey,
+      scaffoldMessengerKey: appScaffoldMessengerKey,
       home: const SessionGate(),
       routes: AppRoutes.routes,
     );

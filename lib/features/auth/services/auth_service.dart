@@ -1,3 +1,4 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
 
@@ -115,6 +116,13 @@ class ApiAuthService implements AuthService {
   Future<VesperUser> _loadOfficer() async {
     final data = await api.get('/users/me');
     final user = VesperUser.fromJson(data as Map<String, dynamic>);
+    try {
+      // Saved so offline forms can show who is signed in.
+      await const FlutterSecureStorage().write(
+        key: 'vesper.signed_in_officer_name',
+        value: (data as Map<String, dynamic>)['full_name'] as String? ?? '',
+      );
+    } catch (_) {}
     if (!user.isOfficer) {
       await api.tokens.clear();
       throw const ApiException(
