@@ -84,6 +84,8 @@ class VesperField extends StatelessWidget {
     this.keyboardType,
     this.maxLines = 1,
     this.validator,
+    this.readOnly = false,
+    this.suffixIcon,
   });
 
   final String label;
@@ -91,6 +93,8 @@ class VesperField extends StatelessWidget {
   final TextInputType? keyboardType;
   final int maxLines;
   final String? Function(String?)? validator;
+  final bool readOnly;
+  final Widget? suffixIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -101,13 +105,13 @@ class VesperField extends StatelessWidget {
         keyboardType: keyboardType,
         maxLines: maxLines,
         validator: validator,
+        readOnly: readOnly,
         style: const TextStyle(fontSize: 16),
-        decoration: _decoration(),
+        decoration: _decoration(suffixIcon: suffixIcon),
       ),
     );
   }
 }
-
 class VesperDropdown extends StatelessWidget {
   const VesperDropdown({
     super.key,
@@ -192,9 +196,10 @@ class FormTypeSelector extends StatelessWidget {
   }
 }
 
-InputDecoration _decoration() => InputDecoration(
+InputDecoration _decoration({Widget? suffixIcon}) => InputDecoration(
   filled: true,
   fillColor: AppColors.fieldBlue,
+  suffixIcon: suffixIcon,
   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
   border: OutlineInputBorder(
     borderRadius: BorderRadius.circular(12),
