@@ -62,15 +62,13 @@ class CatchCheckFormViewModel extends ChangeNotifier {
     return null;
   }
 
-  /// Inspections saved on this phone that have not reached the server yet.
-  /// They have no server ID, so they cannot be picked until they sync.
   int get waitingInspections => _waitingInspections;
   bool get isLoading => _isLoading;
   bool get isSubmitting => _isSubmitting;
   String? get message => _message;
   String? get error => _error;
 
-  /// Shows the cached list straight away, then refreshes it from the server.
+
   Future<void> loadInspections() async {
     _isLoading = true;
     notifyListeners();
@@ -130,6 +128,8 @@ class CatchCheckFormViewModel extends ChangeNotifier {
         if (row is! Map) continue;
         final id = (row['inspection_id'] ?? row['id'])?.toString();
         if (id == null || id.isEmpty) continue;
+        final type = row['inspection_type'];
+        if (type != null && type != 'landing_site') continue;
         final at = DateTime.tryParse('${row['inspected_at']}');
         final rigs = (row['rigs_observed'] as num?)?.toInt();
         final zone = row['zone'];
@@ -251,7 +251,7 @@ class CatchCheckFormViewModel extends ChangeNotifier {
   }) async {
     final inspectionId = _inspectionId;
     if (inspectionId == null) {
-      _error = 'Pick an inspection first. A catch check is added to an inspection.';
+      _error = 'Pick a landing-site inspection first.';
       notifyListeners();
       return false;
     }

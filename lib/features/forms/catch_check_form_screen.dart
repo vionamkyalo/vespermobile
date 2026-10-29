@@ -27,8 +27,6 @@ class CatchCheckFormScreen extends StatelessWidget {
     );
   }
 
-  /// Uses the app's shared ApiClient / SyncService if they are provided above
-  /// this screen; otherwise the form still works from the cached list.
   static T? _maybeRead<T>(BuildContext context) {
     try {
       return Provider.of<T>(context, listen: false);
