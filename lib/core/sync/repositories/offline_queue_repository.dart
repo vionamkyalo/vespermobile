@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -109,6 +111,49 @@ class OfflineQueueRepository {
       where: 'queue_id = ?',
       whereArgs: [queueId],
     );
+  }
+
+  Future<void> markRejected(String queueId, String error) async {
+    final db = await _db;
+    await db.update(
+      _table,
+      {
+        'status': QueueStatus.failed.value,
+        'last_error': error,
+        'attempt_count': maxAttempts,
+      },
+      where: 'queue_id = ?',
+      whereArgs: [queueId],
+    );
+  }
+
+  Future<int> remapZoneIds(Map<String, String> ids) async {
+    if (ids.isEmpty) return 0;
+    final db = await _db;
+    final rows = await db.query(
+      _table,
+      where: 'record_type = ? AND status != ?',
+      whereArgs: [RecordType.inspection.value, QueueStatus.synced.value],
+    );
+    var changed = 0;
+    for (final row in rows) {
+      final entry = OfflineQueueEntry.fromMap(row);
+      final real = ids[entry.payload['zone_id']];
+      if (real == null) continue;
+      await db.update(
+        _table,
+        {
+          'payload': jsonEncode({...entry.payload, 'zone_id': real}),
+          'status': QueueStatus.queued.value,
+          'attempt_count': 0,
+          'last_error': null,
+        },
+        where: 'queue_id = ?',
+        whereArgs: [entry.queueId],
+      );
+      changed++;
+    }
+    return changed;
   }
 
   Future<void> confirm(String queueId) async {

@@ -23,6 +23,15 @@ class SyncResult {
   final bool offline;
 }
 
+enum SyncEventKind { synced, failed }
+
+class SyncEvent {
+  const SyncEvent(this.kind, this.entry, [this.message = '']);
+  final SyncEventKind kind;
+  final OfflineQueueEntry entry;
+  final String message;
+}
+
 class SyncService {
   SyncService({
     required this._repository,
@@ -58,6 +67,10 @@ class SyncService {
   StreamSubscription<List<ConnectivityResult>>? _subscription;
   Future<SyncResult>? _running;
 
+  final _events = StreamController<SyncEvent>.broadcast();
+
+  Stream<SyncEvent> get events => _events.stream;
+
   static Map<String, String> _noHeaders() => const {};
 
   Future<void> start() async {
@@ -90,6 +103,8 @@ class SyncService {
       final path = endpoints[entry.recordType];
       if (path == null) continue;
       if (_waitsForInspection(entry, unconfirmedInspections)) continue;
+      final zoneId = entry.payload['zone_id'];
+      if (zoneId is String && zoneId.startsWith('local:')) continue;
 
       await _repository.markSending(entry.queueId);
 
@@ -106,6 +121,9 @@ class SyncService {
           entry.queueId,
           'Could not reach the server: $error',
         );
+        if (entry.attemptCount + 1 >= OfflineQueueRepository.maxAttempts) {
+          _emitFailed(entry, 'Could not reach the server.');
+        }
         return SyncResult(
           sent: sent,
           failed: failed + 1,
@@ -120,8 +138,21 @@ class SyncService {
           unconfirmedInspections.remove(entry.recordId);
         }
         sent++;
+        if (!_events.isClosed) {
+          _events.add(SyncEvent(SyncEventKind.synced, entry));
+        }
       } else {
-        await _repository.markFailed(entry.queueId, _reason(response));
+        final reason = _reason(response);
+        final code = response.statusCode;
+        if (code >= 400 && code < 500) {
+          await _repository.markRejected(entry.queueId, reason);
+          _emitFailed(entry, reason);
+        } else {
+          await _repository.markFailed(entry.queueId, reason);
+          if (entry.attemptCount + 1 >= OfflineQueueRepository.maxAttempts) {
+            _emitFailed(entry, reason);
+          }
+        }
         failed++;
         if (response.statusCode >= 500) break;
       }
@@ -167,6 +198,12 @@ class SyncService {
     return entry.recordType == RecordType.inspection && statusCode == 409;
   }
 
+  void _emitFailed(OfflineQueueEntry entry, String reason) {
+    if (!_events.isClosed) {
+      _events.add(SyncEvent(SyncEventKind.failed, entry, reason));
+    }
+  }
+
   static String _reason(http.Response response) {
     var detail = response.body;
     try {
@@ -180,6 +217,7 @@ class SyncService {
   }
 
   Future<void> dispose() async {
+    await _events.close();
     await _subscription?.cancel();
     _subscription = null;
     if (_ownsClient) _client.close();

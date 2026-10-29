@@ -27,11 +27,15 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   InspectionType _type = InspectionType.site;
   InspectionOutcome _outcome = InspectionOutcome.activityConsistent;
 
+  bool _coordsFromZone = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await context.read<InspectionFormViewModel>().load();
+      if (!mounted) return;
+      _useZoneCenter(_zone ?? _firstZoneName());
       await _fillLocation();
     });
   }
@@ -45,10 +49,32 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     super.dispose();
   }
 
+  String? _firstZoneName() {
+    final zones = context.read<InspectionFormViewModel>().zones;
+    return zones.isEmpty ? null : zones.first.name;
+  }
+
+  void _useZoneCenter(String? zoneName) {
+    final zone = context.read<InspectionFormViewModel>().zoneNamed(zoneName);
+    final c = zone?.center;
+    if (c == null) return;
+    if (_coords.text.isEmpty || _coordsFromZone) {
+      _coords.text = InspectionFormViewModel.formatCoordinates(c.lat, c.lng);
+      _coordsFromZone = true;
+    }
+  }
+
   Future<void> _fillLocation() async {
     if (!mounted) return;
-    final value = await context.read<InspectionFormViewModel>().locate();
-    if (value != null && mounted) _coords.text = value;
+    final vm = context.read<InspectionFormViewModel>();
+    final pos = await vm.locate();
+    if (!mounted || pos == null) return;
+    setState(() {
+      _coords.text = InspectionFormViewModel.formatCoordinates(pos.lat, pos.lng);
+      _coordsFromZone = false;
+      final here = vm.zoneAtPoint(pos.lat, pos.lng);
+      if (here != null) _zone = here.name;
+    });
   }
 
   String? _zoneValue(List<String> names) {
@@ -65,7 +91,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
 
   String? _coordsValidator(String? v) {
     if (v == null || v.trim().isEmpty) {
-      return 'Tap the location icon or type e.g. -16.52, 28.76';
+      return 'Pick a zone, tap the location icon, or type e.g. -16.52, 28.76';
     }
     return InspectionFormViewModel.parseCoordinates(v) == null
         ? 'Use the format: latitude, longitude'
@@ -99,15 +125,15 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     );
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(result.message)),
-    );
+    if (result.status != SubmitStatus.sent && result.message.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.message)),
+      );
+    }
     if (result.status == SubmitStatus.rejected) return;
 
     _rigs.clear();
     _notes.clear();
-    if (result.status == SubmitStatus.sent) {
-    }
     _fillLocation();
   }
 
@@ -117,7 +143,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     final names = [for (final z in vm.zones) z.name];
     final zoneValue = _zoneValue(names);
 
-    if (_officer.text != vm.officerName) _officer.text = vm.officerName;
+    if (vm.officerName.isNotEmpty && _officer.text != vm.officerName) {
+      _officer.text = vm.officerName;
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -157,26 +185,17 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                       padding: EdgeInsets.symmetric(vertical: 24),
                       child: Center(child: CircularProgressIndicator()),
                     )
-                  else if (vm.loadError != null) ...[
-                    Text(
-                      vm.loadError!,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                    TextButton(
-                      onPressed: () => vm.load(),
-                      child: const Text('Try again'),
-                    ),
-                  ] else ...[
+                  else ...[
                     VesperField(
                       label: 'Officer',
                       controller: _officer,
-                      readOnly: true,
+                      readOnly: vm.officerName.isNotEmpty,
                     ),
                     if (zoneValue == null)
                       const Padding(
                         padding: EdgeInsets.only(left: 12, bottom: 14),
                         child: Text(
-                          'No active zones yet. Ask a coordinator to activate zones.',
+                          'No zones on this device yet.',
                           style: TextStyle(color: Colors.red),
                         ),
                       )
@@ -185,7 +204,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                         label: 'Zone',
                         value: zoneValue,
                         items: names,
-                        onChanged: (v) => setState(() => _zone = v),
+                        onChanged: (v) => setState(() {
+                          _zone = v;
+                          _useZoneCenter(v);
+                        }),
                       ),
                     VesperDropdown(
                       label: 'Inspection type',
@@ -241,7 +263,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                         child: Text(
                           vm.locationError!,
                           style: const TextStyle(
-                            color: Colors.red,
+                            color: Colors.grey,
                             fontSize: 13,
                           ),
                         ),
@@ -256,7 +278,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                     ),
                     const SizedBox(height: 8),
                     PrimaryButton(
-                      label: vm.submitting ? 'Sending…' : 'Submit',
+                      label: vm.submitting ? 'Saving…' : 'Submit',
                       onPressed: vm.submitting ? () {} : _submit,
                     ),
                   ],

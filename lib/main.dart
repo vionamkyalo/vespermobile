@@ -14,6 +14,7 @@ import 'core/api/api_client.dart';
 import 'core/api/token_store.dart';
 import 'core/sync/repositories/offline_queue_repository.dart';
 import 'core/sync/services/sync_service.dart';
+import 'core/sync/sync_notifications.dart';
 import 'features/auth/screens/sign_in_screen.dart';
 import 'features/auth/services/auth_service.dart';
 import 'features/auth/viewmodel/sign_in_view_model.dart';
@@ -44,6 +45,7 @@ void main() {
     asyncHeaders: api.authHeaders,
     refreshSession: api.refreshSession,
   );
+  listenForSyncNotifications(sync, queue);
   unawaited(
     sync.start().catchError((Object e) => debugPrint('Sync start failed: $e')),
   );
