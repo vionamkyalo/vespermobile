@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/buttons.dart';
 import '../../core/widgets/inputs.dart';
 import '../../core/widgets/report_card.dart';
 import '../../core/widgets/vesper_logo.dart';
+import 'models/inspection_report.dart';
+import 'view_models/reports_view_model.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key, this.onStartNewForm});
@@ -16,47 +19,91 @@ class ReportsScreen extends StatefulWidget {
 }
 
 class _ReportsScreenState extends State<ReportsScreen> {
-  static const _filters = ['Violations', 'Inspections', 'Catch checks'];
+  static const _filters = ['Inspections', 'Violations', 'Catch checks'];
   String _filter = _filters.first;
 
-  static const _reports = [
-    ReportItem(
-      type: 'Violations',
-      title: 'Violation - Unregistered rig',
-      received: '10 Nov 2025 10.00pm',
-      officer: 'Mbilizi Mwedzi',
-      zone: 'Binga cluster 2',
-      notes: 'The total number of rigs were 120 with 30 being unregistered. All 30 rigs were impounded.',
-    ),
-    ReportItem(
-      type: 'Violations',
-      title: 'Violation - Unlicensed rig',
-      received: '15 Oct 2025 10.00pm',
-      officer: 'Mbilizi Mwedzi',
-      zone: 'Binga cluster 2',
-      notes: 'The total number of rigs were 100 with 50 being unregistered. All 50 rigs were impounded.',
-    ),
-    ReportItem(
-      type: 'Inspections',
-      title: 'Inspection - Binga cluster 2',
-      received: '12 Nov 2025 09.30am',
-      officer: 'Mbilizi Mwedzi',
-      zone: 'Binga cluster 2',
-      notes: 'Routine patrol. 85 rigs observed, 78 with valid licences. 7 rigs issued warnings for missing lights.',
-    ),
-    ReportItem(
-      type: 'Inspections',
-      title: 'Inspection - Siavonga cluster 1',
-      received: '02 Nov 2025 08.15pm',
-      officer: 'Mbilizi Mwedzi',
-      zone: 'Siavonga cluster 1',
-      notes: 'Night inspection. 64 rigs observed, all registered. No violations recorded.',
-    ),
+  static const _months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
   ];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<ReportsViewModel>().load();
+    });
+  }
+
+  String _formatDate(DateTime utc) {
+    final d = utc.toLocal();
+    final hour12 = d.hour % 12 == 0 ? 12 : d.hour % 12;
+    final minute = d.minute.toString().padLeft(2, '0');
+    final suffix = d.hour >= 12 ? 'pm' : 'am';
+    return '${d.day} ${_months[d.month - 1]} ${d.year} $hour12.$minute$suffix';
+  }
+
+  ReportItem _toItem(InspectionReport r, ReportsViewModel vm) {
+    final notes = (r.notes ?? '').trim();
+    return ReportItem(
+      type: 'Inspections',
+      title: 'Inspection - ${labelOf(r.type)}',
+      received: _formatDate(r.inspectedAt),
+      officer: vm.officerName.isEmpty ? '-' : vm.officerName,
+      zone: vm.zoneName(r.zoneId),
+      notes: '${r.rigsObserved} rigs observed. '
+          'Outcome: ${labelOf(r.outcome).toLowerCase()}.'
+          '${notes.isEmpty ? '' : ' $notes'}',
+    );
+  }
+
+  Widget _body(ReportsViewModel vm) {
+    final items = _filter == 'Inspections'
+        ? vm.inspections.map((r) => _toItem(r, vm)).toList()
+        : <ReportItem>[]; // Violations and catch checks come later.
+
+    if (vm.loading && vm.inspections.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (vm.error != null && vm.inspections.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(vm.error!, textAlign: TextAlign.center),
+              const SizedBox(height: 8),
+              TextButton(onPressed: vm.load, child: const Text('Try again')),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: vm.load,
+      child: items.isEmpty
+          ? ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [
+                SizedBox(height: 120),
+                Center(child: Text('No reports yet')),
+              ],
+            )
+          : ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+              itemCount: items.length,
+              itemBuilder: (_, i) => ReportCard(report: items[i]),
+            ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final visible = _reports.where((r) => r.type == _filter).toList();
+    final vm = context.watch<ReportsViewModel>();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -98,15 +145,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 ],
               ),
             ),
-            Expanded(
-              child: visible.isEmpty
-                  ? const Center(child: Text('No reports yet'))
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-                      itemCount: visible.length,
-                      itemBuilder: (_, i) => ReportCard(report: visible[i]),
-                    ),
-            ),
+            Expanded(child: _body(vm)),
           ],
         ),
       ),

@@ -36,7 +36,7 @@ class _HomeShellState extends State<HomeShell> {
           child: const AlertsScreen(),
         );
       case 1:
-        return const ReportsScreen();
+        return ReportsScreen(onStartNewForm: () => setState(() => _index = 2));
       case 2:
         return const _FormsTab();
       case 3:
