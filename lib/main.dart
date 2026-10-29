@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'features/reports/reports_repository.dart';
+import 'features/reports/view_models/reports_view_model.dart';
 
 import 'app/app.dart';
 import 'app/navigator_key.dart';
@@ -61,6 +63,10 @@ void main() {
             queue: queue,
             sync: sync,
           ),
+        ),
+        ChangeNotifierProvider<ReportsViewModel>(
+          create: (context) =>
+              ReportsViewModel(ReportsRepository(context.read<ApiClient>())),
         ),
       ],
       child: const VesperApp(),
