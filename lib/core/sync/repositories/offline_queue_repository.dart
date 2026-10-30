@@ -156,6 +156,48 @@ class OfflineQueueRepository {
     return changed;
   }
 
+  Future<void> releaseUnsent(String queueId, String reason) async {
+    final db = await _db;
+    await db.rawUpdate(
+      'UPDATE $_table '
+      'SET status = ?, attempt_count = MAX(attempt_count - 1, 0), '
+      'last_error = ? '
+      'WHERE queue_id = ?',
+      [QueueStatus.queued.value, reason, queueId],
+    );
+  }
+
+  Future<int> remapInspectionId(String phoneId, String serverId) async {
+    final db = await _db;
+    final rows = await db.query(
+      _table,
+      where: 'record_type IN (?, ?) AND status != ?',
+      whereArgs: [
+        RecordType.violationReport.value,
+        RecordType.catchCheck.value,
+        QueueStatus.synced.value,
+      ],
+    );
+    var changed = 0;
+    for (final row in rows) {
+      final entry = OfflineQueueEntry.fromMap(row);
+      if (entry.payload['inspection_id'] != phoneId) continue;
+      await db.update(
+        _table,
+        {
+          'payload': jsonEncode({...entry.payload, 'inspection_id': serverId}),
+          'status': QueueStatus.queued.value,
+          'attempt_count': 0,
+          'last_error': null,
+        },
+        where: 'queue_id = ?',
+        whereArgs: [entry.queueId],
+      );
+      changed++;
+    }
+    return changed;
+  }
+
   Future<void> confirm(String queueId) async {
     final db = await _db;
     await db.delete(_table, where: 'queue_id = ?', whereArgs: [queueId]);

@@ -57,6 +57,7 @@ class InspectionFormViewModel extends ChangeNotifier {
   bool _locating = false;
   String? _locationError;
   bool _submitting = false;
+  String? _lastInspectionId;
 
   bool get loading => _loading;
   String get officerName => _officerName;
@@ -64,6 +65,7 @@ class InspectionFormViewModel extends ChangeNotifier {
   bool get locating => _locating;
   String? get locationError => _locationError;
   bool get submitting => _submitting;
+  String? get lastInspectionId => _lastInspectionId;
 
   Future<void> load() async {
     _apply(await _repository.loadLocal());
@@ -116,10 +118,11 @@ class InspectionFormViewModel extends ChangeNotifier {
         return null;
       }
 
-      final settings = (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
+      final settings =
+          (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
           ? AndroidSettings(
               accuracy: LocationAccuracy.high,
-              forceLocationManager: true, 
+              forceLocationManager: true,
               timeLimit: const Duration(seconds: 20),
             )
           : const LocationSettings(
@@ -193,6 +196,7 @@ class InspectionFormViewModel extends ChangeNotifier {
         recordId: id,
         payload: payload,
       );
+      _lastInspectionId = id;
       if (zone.isLocalOnly) {
         return SubmitResult(
           SubmitStatus.savedOffline,

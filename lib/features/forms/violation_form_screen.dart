@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 import '../../app/routes.dart';
 import '../../core/theme/app_colors.dart';
@@ -15,16 +18,38 @@ class ViolationFormScreen extends StatefulWidget {
 }
 
 class _ViolationFormScreenState extends State<ViolationFormScreen> {
-  final _viewModel = ViolationFormViewModel();
-
-  final _officerController = TextEditingController();
+  late final _officerController = TextEditingController(
+    text: context.read<ViolationFormViewModel>().officerName,
+  );
   final _violationsController = TextEditingController();
   final _rigsController = TextEditingController();
   final _notesController = TextEditingController();
 
+  StreamSubscription<String>? _noticeSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    final viewModel = context.read<ViolationFormViewModel>();
+    _noticeSubscription = viewModel.notices.listen(_showNotice);
+    final initial = viewModel.initialNotice;
+    if (initial != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showNotice(initial));
+    }
+  }
+
+  void _showNotice(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(message), duration: const Duration(seconds: 8)),
+      );
+  }
+
   @override
   void dispose() {
-    _viewModel.dispose();
+    _noticeSubscription?.cancel();
     _officerController.dispose();
     _violationsController.dispose();
     _rigsController.dispose();
@@ -35,102 +60,112 @@ class _ViolationFormScreenState extends State<ViolationFormScreen> {
   Future<void> _onSubmit() async {
     FocusScope.of(context).unfocus();
 
-    final submitted = await _viewModel.submit();
+    final viewModel = context.read<ViolationFormViewModel>();
+    final messenger = ScaffoldMessenger.of(context);
+
+    final submitted = await viewModel.submit();
     if (!mounted) return;
 
     if (!submitted) {
-      final message = _viewModel.errorMessage;
+      final message = viewModel.errorMessage;
       if (message != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        messenger.showSnackBar(SnackBar(content: Text(message)));
       }
       return;
     }
 
-    _officerController.clear();
     _violationsController.clear();
     _rigsController.clear();
     _notesController.clear();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Report saved. It will sync when online.')),
+    final outcome = viewModel.lastOutcome;
+    final message = switch (outcome) {
+      SubmitOutcome.sent => 'Report sent to the server.',
+      SubmitOutcome.rejected =>
+        'The server did not accept this report: '
+            '${viewModel.rejectionReason ?? 'unknown reason'}. '
+            'It is kept on this phone.',
+      _ => 'Saved on the phone',
+    };
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: Duration(seconds: outcome == SubmitOutcome.sent ? 4 : 10),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<ViolationFormViewModel>();
+
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
-        child: ListenableBuilder(
-          listenable: _viewModel,
-          builder: (context, _) {
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-              children: [
-                const _Header(),
-                const SizedBox(height: 12),
-                const Text(
-                  'Violation Form',
-                  style: TextStyle(
-                    color: AppColors.navy,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const _FieldLabel('Officer'),
-                _FormTextField(
-                  controller: _officerController,
-                  onChanged: _viewModel.updateOfficer,
-                  errorText: _viewModel.officerError,
-                  textCapitalization: TextCapitalization.words,
-                ),
-                const _FieldLabel('Zone'),
-                _OptionDropdown(
-                  value: _viewModel.zone,
-                  options: ViolationFormViewModel.zoneOptions,
-                  onChanged: _viewModel.updateZone,
-                ),
-                const _FieldLabel('Violation type'),
-                _OptionDropdown(
-                  value: _viewModel.violationType,
-                  options: ViolationFormViewModel.violationTypeOptions.keys
-                      .toList(),
-                  onChanged: _viewModel.updateViolationType,
-                ),
-                const _FieldLabel('Violations found'),
-                _FormTextField(
-                  controller: _violationsController,
-                  onChanged: _viewModel.updateViolationsFound,
-                  errorText: _viewModel.violationsFoundError,
-                  minLines: 3,
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                ),
-                const _FieldLabel('Rigs observed'),
-                _FormTextField(
-                  controller: _rigsController,
-                  onChanged: _viewModel.updateRigsObserved,
-                  errorText: _viewModel.rigsObservedError,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                ),
-                const _FieldLabel('Notes'),
-                _FormTextField(
-                  controller: _notesController,
-                  onChanged: _viewModel.updateNotes,
-                  maxLines: 4,
-                ),
-                const SizedBox(height: 24),
-                _SubmitButton(
-                  isLoading: _viewModel.isSubmitting,
-                  onPressed: _onSubmit,
-                ),
-              ],
-            );
-          },
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          children: [
+            const _Header(),
+            const SizedBox(height: 12),
+            const Text(
+              'Violation Form',
+              style: TextStyle(
+                color: AppColors.navy,
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const _FieldLabel('Officer'),
+            _FormTextField(
+              controller: _officerController,
+              readOnly: true,
+              errorText: viewModel.officerError,
+              textCapitalization: TextCapitalization.words,
+            ),
+            const _FieldLabel('Zone'),
+            _OptionDropdown(
+              value: viewModel.zone,
+              options: ViolationFormViewModel.zoneOptions,
+              onChanged: viewModel.updateZone,
+            ),
+            const _FieldLabel('Violation type'),
+            _OptionDropdown(
+              value: viewModel.violationType,
+              options: ViolationFormViewModel.violationTypeOptions.keys
+                  .toList(),
+              onChanged: viewModel.updateViolationType,
+            ),
+            const _FieldLabel('Violations found'),
+            _FormTextField(
+              controller: _violationsController,
+              onChanged: viewModel.updateViolationsFound,
+              errorText: viewModel.violationsFoundError,
+              minLines: 3,
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+            ),
+            const _FieldLabel('Rigs observed'),
+            _FormTextField(
+              controller: _rigsController,
+              onChanged: viewModel.updateRigsObserved,
+              errorText: viewModel.rigsObservedError,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            ),
+            const _FieldLabel('Notes'),
+            _FormTextField(
+              controller: _notesController,
+              onChanged: viewModel.updateNotes,
+              maxLines: 4,
+            ),
+            const SizedBox(height: 24),
+            _SubmitButton(
+              isLoading: viewModel.isSubmitting,
+              onPressed: _onSubmit,
+            ),
+          ],
         ),
       ),
     );
@@ -222,7 +257,8 @@ InputDecoration _fieldDecoration({String? errorText}) {
 class _FormTextField extends StatelessWidget {
   const _FormTextField({
     required this.controller,
-    required this.onChanged,
+    this.onChanged,
+    this.readOnly = false,
     this.errorText,
     this.maxLines = 1,
     this.minLines,
@@ -232,7 +268,8 @@ class _FormTextField extends StatelessWidget {
   });
 
   final TextEditingController controller;
-  final ValueChanged<String> onChanged;
+  final ValueChanged<String>? onChanged;
+  final bool readOnly;
   final String? errorText;
   final int? maxLines;
   final int? minLines;
@@ -245,6 +282,7 @@ class _FormTextField extends StatelessWidget {
     return TextField(
       controller: controller,
       onChanged: onChanged,
+      readOnly: readOnly,
       maxLines: maxLines,
       minLines: minLines,
       keyboardType: keyboardType,
@@ -284,10 +322,7 @@ class _OptionDropdown extends StatelessWidget {
           dropdownColor: AppColors.white,
           items: [
             for (final option in options)
-              DropdownMenuItem(
-                value: option,
-                child: Text(option.replaceAll('_', ' ')),
-              ),
+              DropdownMenuItem(value: option, child: Text(option)),
           ],
           onChanged: onChanged,
         ),

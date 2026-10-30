@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/routes.dart';
+import '../../core/sync/services/connection_monitor.dart';
+import '../../core/sync/services/sync_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../alerts/alerts_screen.dart';
 import '../alerts/view_models/alerts_view_model.dart';
 import '../auth/viewmodel/sign_in_view_model.dart';
 import '../forms/catch_check_form_screen.dart';
 import '../forms/inspection_form_screen.dart';
+import '../forms/view_models/inspection_form_view_model.dart';
+import '../forms/view_models/violation_form_view_model.dart';
 import '../forms/violation_form_screen.dart';
 import '../profile/profile_screen.dart';
 import '../profile/view_models/profile_view_model.dart';
@@ -49,6 +53,17 @@ class _HomeShellState extends State<HomeShell> {
     }
   }
 
+  static void _switchForm(BuildContext context, String type) {
+    final route = switch (type) {
+      'Inspection' => AppRoutes.inspectionForm,
+      'Violation' => AppRoutes.violationForm,
+      'Catch check' => AppRoutes.catchCheckForm,
+      _ => null,
+    };
+    if (route == null) return;
+    Navigator.pushReplacementNamed(context, route);
+  }
+
   Route<dynamic>? _generateTabRoute(int tabIndex, RouteSettings settings) {
     WidgetBuilder? builder;
 
@@ -57,10 +72,29 @@ class _HomeShellState extends State<HomeShell> {
         builder = (_) => _buildTabRoot(tabIndex);
         break;
       case AppRoutes.inspectionForm:
-        builder = (_) => const InspectionFormScreen();
+        builder = (context) => InspectionFormScreen(
+          onFormTypeSelected: (type) => _switchForm(context, type),
+        );
         break;
       case AppRoutes.violationForm:
-        builder = (_) => const ViolationFormScreen();
+        builder = (_) => ChangeNotifierProvider(
+          create: (context) {
+            final monitor = context.read<ConnectionMonitor>();
+            return ViolationFormViewModel(
+              officerName: context.read<SignInViewModel>().user?.fullName ?? '',
+              inspectionId: context
+                  .read<InspectionFormViewModel>()
+                  .lastInspectionId,
+              resolveInspectionId: context
+                  .read<SyncService>()
+                  .resolveInspectionId,
+              syncNow: context.read<SyncService>().syncNow,
+              connectionEvents: monitor.events,
+              startsOffline: monitor.isOffline,
+            );
+          },
+          child: const ViolationFormScreen(),
+        );
         break;
       case AppRoutes.catchCheckForm:
         builder = (_) => const CatchCheckFormScreen();
@@ -195,26 +229,10 @@ class _NavItem extends StatelessWidget {
 class _FormsTab extends StatelessWidget {
   const _FormsTab();
 
-  Future<void> _logout(BuildContext context) async {
-    final viewModel = context.read<SignInViewModel>();
-    final rootNavigator = Navigator.of(context, rootNavigator: true);
-    await viewModel.logout();
-    rootNavigator.pushNamedAndRemoveUntil(AppRoutes.signIn, (route) => false);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Forms'),
-        actions: [
-          IconButton(
-            tooltip: 'Log out',
-            icon: const Icon(Icons.logout),
-            onPressed: () => _logout(context),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Forms')),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
