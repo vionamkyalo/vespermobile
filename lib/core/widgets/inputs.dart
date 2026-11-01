@@ -31,16 +31,21 @@ class VesperTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final border = OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none);
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide.none,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(
-                color: AppColors.navy,
-                fontSize: 13,
-                fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.navy,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         const SizedBox(height: 6),
         TextFormField(
           controller: controller,
@@ -58,17 +63,23 @@ class VesperTextField extends StatelessWidget {
             filled: true,
             fillColor: AppColors.navy,
             isDense: true,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 14,
+            ),
             suffixIcon: suffix,
             border: border,
             enabledBorder: border,
             focusedBorder: border.copyWith(
-                borderSide: const BorderSide(color: AppColors.cyan, width: 2)),
+              borderSide: const BorderSide(color: AppColors.cyan, width: 2),
+            ),
             errorBorder: border.copyWith(
-                borderSide: const BorderSide(color: AppColors.navy, width: 2)),
+              borderSide: const BorderSide(color: AppColors.navy, width: 2),
+            ),
             errorStyle: const TextStyle(
-                color: AppColors.navy, fontWeight: FontWeight.w600),
+              color: AppColors.navy,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],
@@ -112,6 +123,7 @@ class VesperField extends StatelessWidget {
     );
   }
 }
+
 class VesperDropdown extends StatelessWidget {
   const VesperDropdown({
     super.key,

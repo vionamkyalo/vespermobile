@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
 
@@ -66,10 +67,8 @@ class ApiAuthService implements AuthService {
     );
     await api.saveTokenPair(data as Map<String, dynamic>);
     try {
-   
       return await _loadOfficer();
     } catch (_) {
-    
       await api.tokens.clear();
       rethrow;
     }
@@ -83,7 +82,6 @@ class ApiAuthService implements AuthService {
       body: {'email': email.trim().toLowerCase()},
     );
   }
-
 
   @override
   Future<void> resetPassword({
@@ -108,10 +106,8 @@ class ApiAuthService implements AuthService {
   @override
   Future<bool> hasSession() async => (await api.tokens.readRefresh()) != null;
 
-
   @override
   Future<void> logout() => api.tokens.clear();
-
 
   Future<VesperUser> _loadOfficer() async {
     final data = await api.get('/users/me');
@@ -128,8 +124,7 @@ class ApiAuthService implements AuthService {
       throw const ApiException(
         statusCode: 403,
         code: 'NOT_OFFICER',
-        message:
-            'This app is for patrol officers. Coordinators should use the dashboard.',
+        message: 'This app is for patrol officers. Coordinators should use the dashboard.',
       );
     }
     return user;

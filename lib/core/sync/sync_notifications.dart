@@ -98,8 +98,8 @@ void _showBanner(String text, Color color, {VoidCallback? onRetry}) {
 }
 
 String _label(RecordType type) => switch (type) {
-      RecordType.inspection => 'Inspection',
-      RecordType.violationReport => 'Violation report',
-      RecordType.catchCheck => 'Catch check',
-      RecordType.location => 'Location update',
-    };
+  RecordType.inspection => 'Inspection',
+  RecordType.violationReport => 'Violation report',
+  RecordType.catchCheck => 'Catch check',
+  RecordType.location => 'Location update',
+};

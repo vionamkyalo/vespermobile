@@ -70,7 +70,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     final pos = await vm.locate();
     if (!mounted || pos == null) return;
     setState(() {
-      _coords.text = InspectionFormViewModel.formatCoordinates(pos.lat, pos.lng);
+      _coords.text = InspectionFormViewModel.formatCoordinates(
+        pos.lat,
+        pos.lng,
+      );
       _coordsFromZone = false;
       final here = vm.zoneAtPoint(pos.lat, pos.lng);
       if (here != null) _zone = here.name;
@@ -126,9 +129,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     if (!mounted) return;
 
     if (result.status != SubmitStatus.sent && result.message.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.message)));
     }
     if (result.status == SubmitStatus.rejected) return;
 
@@ -249,7 +251,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                               child: SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               ),
                             )
                           : IconButton(

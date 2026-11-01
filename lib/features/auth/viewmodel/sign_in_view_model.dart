@@ -34,14 +34,12 @@ class SignInViewModel extends ChangeNotifier {
     return null;
   }
 
-
   String? validateResetCode(String? value) {
     final digits = (value ?? '').replaceAll(RegExp(r'\s'), '');
     if (!RegExp(r'^\d{6}$').hasMatch(digits)) return 'Enter the 6-digit code';
     return null;
   }
 
-  
   String? validateNewPassword(String? value) {
     final text = value ?? '';
     if (text.isEmpty) return 'Enter a new password';
@@ -97,7 +95,6 @@ class SignInViewModel extends ChangeNotifier {
     _user = null;
     notifyListeners();
   }
-
 
   void clearError({bool notify = true}) {
     if (_error == null) return;

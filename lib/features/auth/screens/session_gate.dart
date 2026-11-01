@@ -5,7 +5,6 @@ import '../../../app/routes.dart';
 import '../../../core/widgets/vesper_logo.dart';
 import '../viewmodel/sign_in_view_model.dart';
 
-
 class SessionGate extends StatefulWidget {
   const SessionGate({super.key});
 
@@ -25,7 +24,6 @@ class _SessionGateState extends State<SessionGate> {
   Future<void> _decide() async {
     final viewModel = context.read<SignInViewModel>();
 
-
     final results = await Future.wait<Object?>([
       viewModel.restoreSession(),
       Future<void>.delayed(SessionGate.minimumDuration),
@@ -33,9 +31,8 @@ class _SessionGateState extends State<SessionGate> {
     if (!mounted) return;
 
     final signedIn = results.first == true;
-    Navigator.of(context).pushReplacementNamed(
-      signedIn ? AppRoutes.home : AppRoutes.signIn,
-    );
+    Navigator.of(context)
+        .pushReplacementNamed(signedIn ? AppRoutes.home : AppRoutes.signIn);
   }
 
   @override

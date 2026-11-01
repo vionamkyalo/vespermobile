@@ -18,14 +18,14 @@ class InspectionReport {
   final DateTime inspectedAt;
 
   factory InspectionReport.fromJson(Map<String, dynamic> j) => InspectionReport(
-        id: j['inspection_id'] as String,
-        zoneId: j['zone_id'] as String,
-        type: j['inspection_type'] as String,
-        outcome: j['outcome'] as String,
-        rigsObserved: j['rigs_observed'] as int,
-        notes: j['notes'] as String?,
-        inspectedAt: DateTime.parse(j['inspected_at'] as String),
-      );
+    id: j['inspection_id'] as String,
+    zoneId: j['zone_id'] as String,
+    type: j['inspection_type'] as String,
+    outcome: j['outcome'] as String,
+    rigsObserved: j['rigs_observed'] as int,
+    notes: j['notes'] as String?,
+    inspectedAt: DateTime.parse(j['inspected_at'] as String),
+  );
 }
 
 class ReportsOfficer {

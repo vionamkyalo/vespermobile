@@ -19,7 +19,10 @@ class InspectionChoice {
   Map<String, dynamic> toJson() => {'id': id, 'label': label};
 
   factory InspectionChoice.fromJson(Map<String, dynamic> json) =>
-      InspectionChoice(id: json['id'] as String, label: json['label'] as String);
+      InspectionChoice(
+        id: json['id'] as String,
+        label: json['label'] as String,
+      );
 }
 
 class CatchCheckFormViewModel extends ChangeNotifier {
@@ -29,10 +32,10 @@ class CatchCheckFormViewModel extends ChangeNotifier {
     SyncService? sync,
     FlutterSecureStorage? storage,
     this.initialInspectionId,
-  })  : _api = api,
-        _queue = queue ?? OfflineQueueRepository(),
-        _sync = sync,
-        _storage = storage ?? const FlutterSecureStorage();
+  }) : _api = api,
+       _queue = queue ?? OfflineQueueRepository(),
+       _sync = sync,
+       _storage = storage ?? const FlutterSecureStorage();
 
   static const _cacheKey = 'vesper.cache.catch_check_inspections';
   static const _maxShown = 30;
@@ -67,7 +70,6 @@ class CatchCheckFormViewModel extends ChangeNotifier {
   bool get isSubmitting => _isSubmitting;
   String? get message => _message;
   String? get error => _error;
-
 
   Future<void> loadInspections() async {
     _isLoading = true;
@@ -119,9 +121,9 @@ class CatchCheckFormViewModel extends ChangeNotifier {
       final rows = body is List
           ? body
           : body is Map
-              ? (body['items'] ?? body['results'] ?? body['data'] ?? const [])
-                  as List
-              : const [];
+          ? (body['items'] ?? body['results'] ?? body['data'] ?? const [])
+                as List
+          : const [];
 
       final parsed = <({InspectionChoice choice, DateTime? at})>[];
       for (final row in rows) {
@@ -133,10 +135,9 @@ class CatchCheckFormViewModel extends ChangeNotifier {
         final at = DateTime.tryParse('${row['inspected_at']}');
         final rigs = (row['rigs_observed'] as num?)?.toInt();
         final zone = row['zone'];
-        final zoneName = (row['zone_name'] ??
-                (zone is Map ? zone['name'] : null) ??
-                '')
-            .toString();
+        final zoneName =
+            (row['zone_name'] ?? (zone is Map ? zone['name'] : null) ?? '')
+                .toString();
         parsed.add((
           choice: InspectionChoice(
             id: id,
@@ -223,7 +224,8 @@ class CatchCheckFormViewModel extends ChangeNotifier {
   }
 
   String? validateFishType(String? value) {
-    if ((value ?? '').trim().length > 100) return 'Use 100 characters or fewer.';
+    if ((value ?? '').trim().length > 100)
+      return 'Use 100 characters or fewer.';
     return null;
   }
 

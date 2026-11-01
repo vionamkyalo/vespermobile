@@ -5,8 +5,11 @@ import '../../app/routes.dart';
 import '../../core/sync/services/connection_monitor.dart';
 import '../../core/sync/services/sync_service.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/api/api_client.dart';
+import '../../core/location/location_service.dart';
 import '../alerts/alerts_screen.dart';
 import '../alerts/view_models/alerts_view_model.dart';
+import '../alerts/data/alerts_repository.dart';
 import '../auth/viewmodel/sign_in_view_model.dart';
 import '../forms/catch_check_form_screen.dart';
 import '../forms/inspection_form_screen.dart';
@@ -36,7 +39,10 @@ class _HomeShellState extends State<HomeShell> {
     switch (index) {
       case 0:
         return ChangeNotifierProvider(
-          create: (_) => AlertsViewModel(),
+          create: (context) => AlertsViewModel(
+            AlertsRepository(context.read<ApiClient>()),
+            LocationService(),
+          ),
           child: const AlertsScreen(),
         );
       case 1:

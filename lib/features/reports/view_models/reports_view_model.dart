@@ -29,8 +29,10 @@ class ReportsViewModel extends ChangeNotifier {
 
     try {
       final me = await _repo.me();
-      final (zones, inspections) =
-          await (_repo.zoneNames(), _repo.inspections(me.id)).wait;
+      final (zones, inspections) = await (
+        _repo.zoneNames(),
+        _repo.inspections(me.id),
+      ).wait;
       _officerName = me.fullName;
       _zones = zones;
       _inspections = inspections;
