@@ -78,13 +78,13 @@ class Alert {
     ),
   );
 
-  factory Alert.fromJson(Map<String, dynamic> json) {
+    factory Alert.fromJson(Map<String, dynamic> json) {
     final zoneId = json['zone_id'] as String;
     return Alert(
       id: json['alert_id'] as String,
       zoneId: zoneId,
-      zoneName:
-          json['zone_name'] as String? ?? 'Zone ${zoneId.substring(0, 8)}',
+    
+      zoneName: json['zone_name'] as String? ?? 'Zone ${zoneId.substring(0, 8)}',
       confidence: (json['confidence'] as num).toDouble(),
       priority: json['priority'] as String? ?? 'low',
       summary: json['summary'] as String? ?? '',
@@ -97,7 +97,7 @@ class Alert {
       createdAt: DateTime.parse(json['created_at'] as String).toLocal(),
     );
   }
-}
+
 
 double _haversineKm(double lat1, double lon1, double lat2, double lon2) {
   const earthRadiusKm = 6371.0088;
@@ -110,4 +110,5 @@ double _haversineKm(double lat1, double lon1, double lat2, double lon2) {
           math.cos(rad(lat2)) *
           math.pow(math.sin(dLon / 2), 2);
   return 2 * earthRadiusKm * math.asin(math.min(1.0, math.sqrt(a)));
+}
 }
