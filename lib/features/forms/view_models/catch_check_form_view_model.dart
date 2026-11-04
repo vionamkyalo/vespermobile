@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -27,14 +26,12 @@ class InspectionChoice {
 
 class CatchCheckFormViewModel extends ChangeNotifier {
   CatchCheckFormViewModel({
-    ApiClient? api,
+    this._api,
     OfflineQueueRepository? queue,
-    SyncService? sync,
+    this._sync,
     FlutterSecureStorage? storage,
     this.initialInspectionId,
-  }) : _api = api,
-       _queue = queue ?? OfflineQueueRepository(),
-       _sync = sync,
+  }) : _queue = queue ?? OfflineQueueRepository(),
        _storage = storage ?? const FlutterSecureStorage();
 
   static const _cacheKey = 'vesper.cache.catch_check_inspections';
@@ -224,8 +221,9 @@ class CatchCheckFormViewModel extends ChangeNotifier {
   }
 
   String? validateFishType(String? value) {
-    if ((value ?? '').trim().length > 100)
+    if ((value ?? '').trim().length > 100) {
       return 'Use 100 characters or fewer.';
+    }
     return null;
   }
 
@@ -277,9 +275,7 @@ class CatchCheckFormViewModel extends ChangeNotifier {
         recordId: form.catchId,
         payload: form.toJson(),
       );
-      final sync = _sync;
-      if (sync != null) unawaited(sync.syncNow());
-      _message = 'Catch check saved. It will be sent when you are online.';
+      await _trySend(form.catchId);
       return true;
     } catch (e) {
       debugPrint('Could not save catch check: $e');
@@ -290,4 +286,55 @@ class CatchCheckFormViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> _trySend(String catchId) async {
+    final sync = _sync;
+    if (sync == null) {
+      _message = _savedOffline;
+      return;
+    }
+
+    try {
+      await sync.syncNow();
+      var entry = await _queue.findByRecord(RecordType.catchCheck, catchId);
+      if (entry != null &&
+          entry.status == QueueStatus.queued &&
+          entry.lastError == null) {
+        await sync.syncNow();
+        entry = await _queue.findByRecord(RecordType.catchCheck, catchId);
+      }
+
+      if (entry == null) {
+        _message = null;
+        return;
+      }
+
+      final reason = entry.lastError;
+      final refused =
+          entry.status == QueueStatus.failed &&
+          entry.attemptCount >= OfflineQueueRepository.maxAttempts;
+
+      if (refused) {
+        _error =
+            "Catch check couldn't be sent. It's still saved on this phone."
+            '${reason == null ? '' : '\n$reason'}';
+      } else if (entry.status == QueueStatus.failed) {
+        _message =
+            'Catch check saved on this phone. The server had a problem, so '
+            'it will try again automatically.';
+      } else if (reason != null) {
+        _message = _savedOffline;
+      } else {
+        _message =
+            'Catch check saved on this phone. It will be sent right after '
+            'its inspection.';
+      }
+    } catch (e) {
+      debugPrint('Sync after catch check failed: $e');
+      _message = _savedOffline;
+    }
+  }
+
+  static const String _savedOffline =
+      'Catch check saved. It will be sent when you are online.';
 }

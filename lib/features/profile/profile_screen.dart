@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/routes.dart';
+import '../../core/sync/services/sync_service.dart';
 import '../../core/theme/app_colors.dart';
 import 'models/user_profile.dart';
 import 'view_models/profile_view_model.dart';
+import 'view_models/waiting_reports_view_model.dart';
+import 'waiting_reports_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -16,6 +19,22 @@ class ProfileScreen extends StatelessWidget {
     await viewModel.signOut();
 
     navigator.pushNamedAndRemoveUntil(AppRoutes.signIn, (_) => false);
+  }
+
+  Future<void> _openWaitingReports(BuildContext context) async {
+    final viewModel = context.read<ProfileViewModel>();
+    final sync = context.read<SyncService>();
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ChangeNotifierProvider(
+          create: (_) => WaitingReportsViewModel(sync: sync),
+          child: const WaitingReportsScreen(),
+        ),
+      ),
+    );
+
+    await viewModel.refreshWaiting();
   }
 
   @override
@@ -40,7 +59,7 @@ class ProfileScreen extends StatelessWidget {
             _StatusCard(
               waitingSummary: viewModel.waitingSummary,
               onManageLocation: viewModel.manageLocation,
-              onOpenWaiting: viewModel.openWaitingReports,
+              onOpenWaiting: () => _openWaitingReports(context),
             ),
             const SizedBox(height: 16),
             const _InfoNote(),
@@ -84,16 +103,15 @@ class _Header extends StatelessWidget {
 }
 
 class _NavyCard extends StatelessWidget {
-  const _NavyCard({required this.child, this.padding});
+  const _NavyCard({required this.child});
 
   final Widget child;
-  final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: padding ?? const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.navy,
         borderRadius: BorderRadius.circular(10),

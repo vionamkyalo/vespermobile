@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'api_config.dart';
@@ -53,6 +54,16 @@ class ApiClient {
     return Uri.parse('$base$path').replace(queryParameters: query);
   }
 
+  static String _apiPath(String path) {
+    if (path.contains('login')) return '/api/auth/login';
+    if (path.contains('officer-assignments')) return '/api/alert-assignments';
+    if (path.contains('catchCheck') || path.contains('catch-check')) {
+      return '/api/catch-checks';
+    }
+    if (path.startsWith('/api/')) return path;
+    return '/api${path.startsWith('/') ? path : '/$path'}';
+  }
+
   Future<dynamic> _send(
     String method,
     String path, {
@@ -62,27 +73,11 @@ class ApiClient {
     Map<String, String>? headers,
     bool retried = false,
   }) async {
-
-    print("🎯 FLUTTER CALLING PATH: '$path' | FULL URI: ${_uri(path, query)}");
-
-     if (path.contains('login')) {
-      path = '/api/auth/login';
-    } else if (path == '/users/me') {
-      path = '/api/users/me';
-    } else if (path.contains('officer-assignments')) {
-      path = '/api/alert-assignments';
-    } else if (path.contains('catchCheck') || path.contains('catch-check')) {
-      path = '/api/catch-checks';
-    }
-
-
+    path = _apiPath(path);
 
     final request = http.Request(method, _uri(path, query));
 
     request.headers['Accept'] = 'application/json';
-    if (baseUrl.contains('ngrok')) {
-      request.headers['ngrok-skip-browser-warning'] = 'true';
-    }
     if (headers != null) request.headers.addAll(headers);
     if (body != null) {
       request.headers['Content-Type'] = 'application/json';
@@ -101,9 +96,8 @@ class ApiClient {
       throw ApiException.network();
     } on http.ClientException {
       throw ApiException.network();
-    } catch (e, stacktrace) {
-      print("CRITICAL FLUTTER NET ERROR: $e");
-      print("STACKTRACE: $stacktrace");
+    } catch (e) {
+      debugPrint('Network error calling $path: $e');
       throw ApiException.network();
     }
 
@@ -181,10 +175,7 @@ class ApiClient {
   Future<bool> refreshSession() => _refreshTokens();
   Future<Map<String, String>> authHeaders() async {
     final access = await tokens.readAccess();
-    return {
-      if (baseUrl.contains('ngrok')) 'ngrok-skip-browser-warning': 'true',
-      if (access != null) 'Authorization': 'Bearer $access',
-    };
+    return {if (access != null) 'Authorization': 'Bearer $access'};
   }
 
   Future<void> saveTokenPair(Map<String, dynamic> pair) async {

@@ -6,7 +6,6 @@ import '../../core/widgets/buttons.dart';
 import '../../core/widgets/inputs.dart';
 import '../../core/widgets/report_card.dart';
 import '../../core/widgets/vesper_logo.dart';
-import 'models/inspection_report.dart';
 import 'view_models/reports_view_model.dart';
 
 class ReportsScreen extends StatefulWidget {
@@ -19,23 +18,8 @@ class ReportsScreen extends StatefulWidget {
 }
 
 class _ReportsScreenState extends State<ReportsScreen> {
-  static const _filters = ['Inspections', 'Violations', 'Catch checks'];
+  static const _filters = ReportsViewModel.filters;
   String _filter = _filters.first;
-
-  static const _months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
 
   @override
   void initState() {
@@ -45,39 +29,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
     });
   }
 
-  String _formatDate(DateTime utc) {
-    final d = utc.toLocal();
-    final hour12 = d.hour % 12 == 0 ? 12 : d.hour % 12;
-    final minute = d.minute.toString().padLeft(2, '0');
-    final suffix = d.hour >= 12 ? 'pm' : 'am';
-    return '${d.day} ${_months[d.month - 1]} ${d.year} $hour12.$minute$suffix';
-  }
-
-  ReportItem _toItem(InspectionReport r, ReportsViewModel vm) {
-    final notes = (r.notes ?? '').trim();
-    return ReportItem(
-      type: 'Inspections',
-      title: 'Inspection - ${labelOf(r.type)}',
-      received: _formatDate(r.inspectedAt),
-      officer: vm.officerName.isEmpty ? '-' : vm.officerName,
-      zone: vm.zoneName(r.zoneId),
-      notes:
-          '${r.rigsObserved} rigs observed. '
-          'Outcome: ${labelOf(r.outcome).toLowerCase()}.'
-          '${notes.isEmpty ? '' : ' $notes'}',
-    );
-  }
-
   Widget _body(ReportsViewModel vm) {
-    final items = _filter == 'Inspections'
-        ? vm.inspections.map((r) => _toItem(r, vm)).toList()
-        : <ReportItem>[]; // Violations and catch checks come later.
+    final items = vm.itemsFor(_filter);
 
-    if (vm.loading && vm.inspections.isEmpty) {
+    if (vm.loading && !vm.hasAnyReports) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (vm.error != null && vm.inspections.isEmpty) {
+    if (vm.error != null && !vm.hasAnyReports) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
