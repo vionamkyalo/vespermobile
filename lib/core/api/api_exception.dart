@@ -19,9 +19,9 @@ class ApiException implements Exception {
   factory ApiException.network() => const ApiException(
     statusCode: 0,
     code: 'NETWORK',
-    message: "Can't reach Vesper. Check your internet connection and try again.",
+    message:
+        "Can't reach Vesper. Check your internet connection and try again.",
   );
-
 
   factory ApiException.fromBody(int statusCode, Object? body) {
     if (body is Map<String, dynamic>) {
@@ -67,7 +67,8 @@ class ApiException implements Exception {
     if (status == 403) return "You don't have access to this.";
     if (status == 404) return 'Not found.';
     if (status == 429) return 'Too many tries. Please wait a moment.';
-    if (status >= 500) return 'Vesper is having a problem. Please try again soon.';
+    if (status >= 500)
+      return 'Vesper is having a problem. Please try again soon.';
     return 'Something went wrong. Please try again.';
   }
 

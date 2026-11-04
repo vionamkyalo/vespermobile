@@ -27,7 +27,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   void initState() {
     super.initState();
-    
+
     context.read<SignInViewModel>().clearError(notify: false);
   }
 
@@ -72,8 +72,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return _AuthCard(
       formKey: _formKey,
       title: 'Forgot password',
-      subtitle:
-          'Enter your email address and we will email you a 6-digit code to reset your password.',
+      subtitle: 'Enter your email address and we will email you a 6-digit code to reset your password.',
       children: [
         VesperTextField(
           label: 'Email',
@@ -86,7 +85,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           onSubmitted: (_) => _send(),
         ),
         const SizedBox(height: 26),
-        PrimaryButton(label: 'Send code', busy: viewModel.busy, onPressed: _send),
+        PrimaryButton(
+          label: 'Send code',
+          busy: viewModel.busy,
+          onPressed: _send,
+        ),
         const SizedBox(height: 14),
         Center(
           child: GestureDetector(
@@ -119,8 +122,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 }
-
-
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key, required this.email});
@@ -233,7 +234,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           textInputAction: TextInputAction.next,
           validator: viewModel.validateNewPassword,
           suffix: IconButton(
-            tooltip: viewModel.passwordHidden ? 'Show password' : 'Hide password',
+            tooltip: viewModel.passwordHidden
+                ? 'Show password'
+                : 'Hide password',
             icon: Icon(
               viewModel.passwordHidden
                   ? Icons.visibility_outlined
@@ -254,7 +257,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           controller: _confirm,
           obscureText: viewModel.passwordHidden,
           textInputAction: TextInputAction.done,
-          validator: (v) => v != _password.text ? 'Passwords do not match' : null,
+          validator: (v) =>
+              v != _password.text ? 'Passwords do not match' : null,
           onSubmitted: (_) => _save(),
         ),
         const SizedBox(height: 26),
@@ -281,7 +285,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     );
   }
 }
-
 
 class _AuthCard extends StatelessWidget {
   const _AuthCard({

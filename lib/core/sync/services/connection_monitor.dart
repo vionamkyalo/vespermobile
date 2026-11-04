@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
+
 import 'sync_service.dart';
 
 enum ConnectionChange { wentOffline, backOnline }

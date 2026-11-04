@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 
-
 class VesperLogo extends StatelessWidget {
-  const VesperLogo({
-    super.key, 
-    this.height = 44, 
-    this.showText = true,
-  });
+  const VesperLogo({super.key, this.height = 44, this.showText = true});
 
   final double height;
   final bool showText;

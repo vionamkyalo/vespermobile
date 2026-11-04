@@ -37,9 +37,7 @@ class PrimaryButton extends StatelessWidget {
           disabledBackgroundColor: background.withValues(alpha: 0.6),
           foregroundColor: Colors.white,
           elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: _loading
             ? const SizedBox(
@@ -64,11 +62,7 @@ class PrimaryButton extends StatelessWidget {
 }
 
 class AccentButton extends StatelessWidget {
-  const AccentButton({
-    super.key,
-    required this.label,
-    required this.onPressed,
-  });
+  const AccentButton({super.key, required this.label, required this.onPressed});
 
   final String label;
   final VoidCallback? onPressed;
@@ -82,9 +76,7 @@ class AccentButton extends StatelessWidget {
         foregroundColor: AppColors.navy,
         elevation: 3,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
       child: Text(
         label,

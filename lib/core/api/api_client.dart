@@ -62,7 +62,23 @@ class ApiClient {
     Map<String, String>? headers,
     bool retried = false,
   }) async {
+
+    print("🎯 FLUTTER CALLING PATH: '$path' | FULL URI: ${_uri(path, query)}");
+
+     if (path.contains('login')) {
+      path = '/api/auth/login';
+    } else if (path == '/users/me') {
+      path = '/api/users/me';
+    } else if (path.contains('officer-assignments')) {
+      path = '/api/alert-assignments';
+    } else if (path.contains('catchCheck') || path.contains('catch-check')) {
+      path = '/api/catch-checks';
+    }
+
+
+
     final request = http.Request(method, _uri(path, query));
+
     request.headers['Accept'] = 'application/json';
     if (baseUrl.contains('ngrok')) {
       request.headers['ngrok-skip-browser-warning'] = 'true';

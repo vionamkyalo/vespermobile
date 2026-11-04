@@ -23,8 +23,18 @@ class _ReportsScreenState extends State<ReportsScreen> {
   String _filter = _filters.first;
 
   static const _months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   @override
@@ -51,7 +61,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
       received: _formatDate(r.inspectedAt),
       officer: vm.officerName.isEmpty ? '-' : vm.officerName,
       zone: vm.zoneName(r.zoneId),
-      notes: '${r.rigsObserved} rigs observed. '
+      notes:
+          '${r.rigsObserved} rigs observed. '
           'Outcome: ${labelOf(r.outcome).toLowerCase()}.'
           '${notes.isEmpty ? '' : ' $notes'}',
     );

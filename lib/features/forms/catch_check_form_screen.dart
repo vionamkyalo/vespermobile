@@ -103,9 +103,8 @@ class _CatchCheckFormViewState extends State<_CatchCheckFormView> {
     ]) {
       controller.clear();
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(viewModel.message ?? 'Saved.')),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(viewModel.message ?? 'Saved.')));
   }
 
   @override
@@ -173,7 +172,10 @@ class _CatchCheckFormViewState extends State<_CatchCheckFormView> {
                       child: Text(
                         '${viewModel.waitingInspections} inspection(s) still waiting to sync. '
                         'They will show here once sent.',
-                        style: const TextStyle(color: Colors.grey, fontSize: 13),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   VesperField(

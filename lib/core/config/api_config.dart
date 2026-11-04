@@ -1,13 +1,8 @@
 class ApiConfig {
-  ApiConfig._();
-
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://vesper-8f787b421f31.herokuapp.com',
+    defaultValue: 'https://relive-mummified-jovial.ngrok-free.dev',
   );
 
-  static const String testUserId = String.fromEnvironment('TEST_USER_ID');
-
-  static Map<String, String> headers() =>
-      testUserId.isEmpty ? const {} : {'X-Test-User-ID': testUserId};
+  static const Duration timeout = Duration(seconds: 30);
 }

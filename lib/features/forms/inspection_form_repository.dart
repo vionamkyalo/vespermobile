@@ -42,7 +42,8 @@ class FormZone {
     for (var i = 0, j = boundary.length - 1; i < boundary.length; j = i++) {
       final xi = boundary[i][0], yi = boundary[i][1];
       final xj = boundary[j][0], yj = boundary[j][1];
-      final crosses = (yi > lat) != (yj > lat) &&
+      final crosses =
+          (yi > lat) != (yj > lat) &&
           lng < (xj - xi) * (lat - yi) / (yj - yi) + xi;
       if (crosses) inside = !inside;
     }
@@ -51,8 +52,9 @@ class FormZone {
 
   factory FormZone.fromApi(Map<String, dynamic> z) {
     final geo = z['boundary'] as Map<String, dynamic>?;
-    final rings =
-        geo?['type'] == 'Polygon' ? geo!['coordinates'] as List? : null;
+    final rings = geo?['type'] == 'Polygon'
+        ? geo!['coordinates'] as List?
+        : null;
     return FormZone(
       id: z['zone_id'] as String,
       name: z['name'] as String,
@@ -61,19 +63,22 @@ class FormZone {
   }
 
   factory FormZone.fromCache(Map<String, dynamic> z) => FormZone(
-        id: z['id'] as String,
-        name: z['name'] as String,
-        boundary: _ring(z['boundary']),
-      );
+    id: z['id'] as String,
+    name: z['name'] as String,
+    boundary: _ring(z['boundary']),
+  );
 
-  Map<String, dynamic> toCache() =>
-      {'id': id, 'name': name, 'boundary': boundary};
+  Map<String, dynamic> toCache() => {
+    'id': id,
+    'name': name,
+    'boundary': boundary,
+  };
 
   static List<List<double>> _ring(Object? raw) => [
-        if (raw is List)
-          for (final p in raw)
-            [((p as List)[0] as num).toDouble(), (p[1] as num).toDouble()],
-      ];
+    if (raw is List)
+      for (final p in raw)
+        [((p as List)[0] as num).toDouble(), (p[1] as num).toDouble()],
+  ];
 }
 
 FormZone? zoneAt(List<FormZone> zones, double lat, double lng) {
@@ -91,7 +96,7 @@ class FormLookups {
 
 class InspectionFormRepository {
   InspectionFormRepository(this._api, [FlutterSecureStorage? storage])
-      : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ?? const FlutterSecureStorage();
 
   static const _cacheKey = 'vesper.cache.inspection_lookups';
 
@@ -129,8 +134,10 @@ class InspectionFormRepository {
   Future<FormLookups?> refresh() async {
     try {
       final me = await _api.get('/users/me') as Map<String, dynamic>;
-      final raw = await _api.get('/zones', query: {'active_only': 'true'})
-          as List<dynamic>;
+      final raw = await _api.get(
+        '/zones',
+        query: {'active_only': 'true'},
+      ) as List<dynamic>;
       final zones = [
         for (final z in raw) FormZone.fromApi(z as Map<String, dynamic>),
       ]..sort((a, b) => a.name.compareTo(b.name));

@@ -1,56 +1,114 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
+import '../../../core/api/api_exception.dart';
+import '../../../core/location/location_service.dart';
+import '../data/alerts_repository.dart';
 import '../models/alerts.dart';
 
+enum AlertsLoadState { loading, ready, error }
+
+enum AlertsTab { assigned, allZones }
+
 class AlertsViewModel extends ChangeNotifier {
-  AlertsViewModel({List<Alert>? alerts}) : _alerts = alerts ?? _sampleAlerts();
+  AlertsViewModel(this._repository, this._location);
 
-  final List<Alert> _alerts;
-  bool _showAllZones = false;
+  final AlertsRepository _repository;
+  final LocationService _location;
 
-  List<Alert> get alerts => List.unmodifiable(_alerts);
-  bool get showAllZones => _showAllZones;
-  int get assignedCount => _alerts.where((alert) => !alert.isAcknowledged).length;
-  int get allZonesCount => 7;
+  List<Alert> _alerts = const [];
+  AlertsLoadState _state = AlertsLoadState.loading;
+  AlertsTab _tab = AlertsTab.assigned;
+  String? _error;
+  OfficerPosition? _position;
+  final Set<String> _acknowledging = {};
 
-  List<Alert> get visibleAlerts => List.unmodifiable(_alerts);
+  AlertsLoadState get state => _state;
+  AlertsTab get tab => _tab;
+  String? get error => _error;
 
-  void showAssigned() {
-    if (_showAllZones) {
-      _showAllZones = false;
-      notifyListeners();
-    }
-  }
+  Iterable<Alert> get _open => _alerts.where((a) => a.isOpen);
 
-  void selectAllZones() {
-    if (!_showAllZones) {
-      _showAllZones = true;
-      notifyListeners();
-    }
-  }
+  List<Alert> get assignedAlerts =>
+      _open.where((a) => a.awaitingAcknowledgement).toList();
+  List<Alert> get visibleAlerts =>
+      _tab == AlertsTab.assigned ? assignedAlerts : _open.toList();
 
-  void acknowledgeAlert(String id) {
-    final index = _alerts.indexWhere((alert) => alert.id == id);
-    if (index == -1 || _alerts[index].isAcknowledged) return;
-    _alerts[index] = _alerts[index].copyWith(assignmentStatus: 'acknowledged');
+  int get assignedCount => assignedAlerts.length;
+  int get zoneCount => _open.map((a) => a.zoneId).toSet().length;
+
+  bool isAcknowledging(String id) => _acknowledging.contains(id);
+
+  void selectTab(AlertsTab tab) {
+    if (_tab == tab) return;
+    _tab = tab;
     notifyListeners();
   }
 
-  static List<Alert> _sampleAlerts() {
-    final now = DateTime(2026, 10, 22, 12, 39);
+  Future<void> load({bool refresh = false}) async {
+    if (!refresh) {
+      _state = AlertsLoadState.loading;
+      notifyListeners();
+    }
+    try {
+      _alerts = _withDistances(await _repository.fetchMyAlerts());
+      _error = null;
+      _state = AlertsLoadState.ready;
+    } on ApiException catch (e) {
+      _fail(e.message, refresh);
+    } catch (e) {
+      debugPrint('Loading alerts failed: $e');
+      _fail('Something went wrong. Please try again.', refresh);
+    }
+    notifyListeners();
+    if (_state == AlertsLoadState.ready) unawaited(_updateDistances());
+  }
+
+  Future<String?> acknowledge(String id) async {
+    if (!_acknowledging.add(id)) return null;
+    notifyListeners();
+    try {
+      final position = await _location.currentPosition();
+      await _repository.acknowledge(id, position);
+      _alerts = [
+        for (final a in _alerts)
+          a.id == id
+              ? a.copyWith(assignmentStatus: AssignmentStatus.acknowledged)
+              : a,
+      ];
+      return null;
+    } on LocationException catch (e) {
+      return e.message;
+    } on ApiException catch (e) {
+      return e.message;
+    } finally {
+      _acknowledging.remove(id);
+      notifyListeners();
+    }
+  }
+
+  Future<void> _updateDistances() async {
+    try {
+      _position = await _location.currentPosition();
+    } on LocationException {
+      return;
+    }
+    _alerts = _withDistances(_alerts);
+    notifyListeners();
+  }
+
+  List<Alert> _withDistances(List<Alert> alerts) {
+    final p = _position;
+    if (p == null) return alerts;
     return [
-      Alert(
-        id: 'alert-1', zoneName: 'Binga cluster 2', distanceKm: 2.1,
-        confidence: 0.91, createdAt: now, assignmentStatus: 'assigned',
-      ),
-      Alert(
-        id: 'alert-2', zoneName: 'Binga cluster 2', distanceKm: 2.1,
-        confidence: 0.91, createdAt: now, assignmentStatus: 'acknowledged',
-      ),
-      Alert(
-        id: 'alert-3', zoneName: 'Binga cluster 2', distanceKm: 2.1,
-        confidence: 0.91, createdAt: now, assignmentStatus: 'assigned',
-      ),
+      for (final a in alerts) a.withDistanceFrom(p.latitude, p.longitude),
     ];
+  }
+
+  void _fail(String message, bool refresh) {
+    if (refresh && _alerts.isNotEmpty) return;
+    _error = message;
+    _state = AlertsLoadState.error;
   }
 }
