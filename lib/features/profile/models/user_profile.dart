@@ -1,3 +1,5 @@
+import '../../auth/services/auth_service.dart';
+
 class UserProfile {
   const UserProfile({
     required this.fullName,
@@ -5,19 +7,27 @@ class UserProfile {
     required this.phone,
     required this.email,
   });
+  factory UserProfile.fromUser(VesperUser user) {
+    final name = user.fullName.trim().isNotEmpty
+        ? user.fullName.trim()
+        : '${user.firstName} ${user.lastName}'.trim();
+    return UserProfile(
+      fullName: name,
+      role: roleLabel(user.role),
+      phone: user.phoneNumber,
+      email: user.email,
+    );
+  }
 
   final String fullName;
   final String role;
   final String phone;
   final String email;
-
-  static const UserProfile placeholder = UserProfile(
-    fullName: 'Tendai Phiri',
-    role: 'Patrol Officer',
-    phone: '+263 795 679 308',
-    email: 'tendaiphiri@gmail.com',
-  );
-
+  static String roleLabel(String role) => role
+      .split('_')
+      .where((word) => word.isNotEmpty)
+      .map((word) => '${word[0].toUpperCase()}${word.substring(1)}')
+      .join(' ');
   String get initials {
     final parts = fullName
         .trim()

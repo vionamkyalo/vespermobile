@@ -160,7 +160,7 @@ class SyncService {
           }
         }
         failed++;
-        if (response.statusCode >= 500) break;
+        if (code == 502 || code == 503 || code == 504) break;
       }
     }
 
@@ -245,7 +245,9 @@ class SyncService {
         final value = decoded['detail'];
         detail = value is String ? value : jsonEncode(value);
       }
-    } on FormatException {}
+    } on FormatException {
+      // Not JSON: keep the raw body.
+    }
     return 'Server answered ${response.statusCode}: $detail';
   }
 

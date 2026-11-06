@@ -19,6 +19,7 @@ import '../forms/violation_form_screen.dart';
 import '../profile/profile_screen.dart';
 import '../profile/view_models/profile_view_model.dart';
 import '../reports/reports_screen.dart';
+import '../reports/view_models/reports_view_model.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -51,7 +52,10 @@ class _HomeShellState extends State<HomeShell> {
         return const _FormsTab();
       case 3:
         return ChangeNotifierProvider(
-          create: (_) => ProfileViewModel(),
+          create: (context) => ProfileViewModel(
+            session: context.read<SignInViewModel>(),
+            syncEvents: context.read<SyncService>().events,
+          ),
           child: const ProfileScreen(),
         );
       default:
@@ -115,6 +119,8 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   void _goTo(int index) {
+    if (index == 1) context.read<ReportsViewModel>().load();
+
     if (_index == index) {
       _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
       return;
@@ -129,7 +135,8 @@ class _HomeShellState extends State<HomeShell> {
     return NavigatorPopHandler<Object?>(
       enabled: _index == index,
       onPopWithResult: (result) {
-        _navigatorKeys[index].currentState?.pop(result);
+        final navigator = _navigatorKeys[index].currentState;
+        if (navigator != null && navigator.canPop()) navigator.pop(result);
       },
       child: Navigator(
         key: _navigatorKeys[index],

@@ -40,7 +40,7 @@ void main() {
   final queue = OfflineQueueRepository();
   final sync = SyncService(
     repository: queue,
-    baseUrl: api.baseUrl.replaceFirst(RegExp(r'/+$'), ''),
+    baseUrl: '${api.baseUrl.replaceFirst(RegExp(r'/+$'), '')}/api',
     asyncHeaders: api.authHeaders,
     refreshSession: api.refreshSession,
   );
@@ -68,8 +68,11 @@ void main() {
           ),
         ),
         ChangeNotifierProvider<ReportsViewModel>(
-          create: (context) =>
-              ReportsViewModel(ReportsRepository(context.read<ApiClient>())),
+          create: (context) => ReportsViewModel(
+            ReportsRepository(context.read<ApiClient>()),
+            queue: queue,
+            syncEvents: sync.events,
+          ),
         ),
       ],
       child: const VesperApp(),

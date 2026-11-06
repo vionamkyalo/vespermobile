@@ -103,8 +103,9 @@ class _CatchCheckFormViewState extends State<_CatchCheckFormView> {
     ]) {
       controller.clear();
     }
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(viewModel.message ?? 'Saved.')));
+    final notice = viewModel.error ?? viewModel.message;
+    if (notice == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(notice)));
   }
 
   @override

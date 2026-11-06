@@ -84,6 +84,17 @@ class OfflineQueueRepository {
     return rows.map((row) => row['record_id'] as String).toSet();
   }
 
+  Future<List<OfflineQueueEntry>> waiting() async {
+    final db = await _db;
+    final rows = await db.query(
+      _table,
+      where: 'status != ?',
+      whereArgs: [QueueStatus.synced.value],
+      orderBy: 'created_at ASC',
+    );
+    return rows.map(OfflineQueueEntry.fromMap).toList();
+  }
+
   Future<int> waitingCount() async {
     final db = await _db;
     final result = await db.rawQuery(
