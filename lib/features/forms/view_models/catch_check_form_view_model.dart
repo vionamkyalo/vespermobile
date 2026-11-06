@@ -127,8 +127,6 @@ class CatchCheckFormViewModel extends ChangeNotifier {
         if (row is! Map) continue;
         final id = (row['inspection_id'] ?? row['id'])?.toString();
         if (id == null || id.isEmpty) continue;
-        final type = row['inspection_type'];
-        if (type != null && type != 'landing_site') continue;
         final at = DateTime.tryParse('${row['inspected_at']}');
         final rigs = (row['rigs_observed'] as num?)?.toInt();
         final zone = row['zone'];
@@ -251,7 +249,7 @@ class CatchCheckFormViewModel extends ChangeNotifier {
   }) async {
     final inspectionId = _inspectionId;
     if (inspectionId == null) {
-      _error = 'Pick a landing-site inspection first.';
+      _error = 'Pick an inspection first.';
       notifyListeners();
       return false;
     }
