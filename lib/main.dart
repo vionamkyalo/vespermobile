@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:ui';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -21,10 +24,31 @@ import 'features/forms/inspection_form_repository.dart';
 import 'features/forms/view_models/inspection_form_view_model.dart';
 import 'features/reports/reports_repository.dart';
 import 'features/reports/view_models/reports_view_model.dart';
+import 'firebase_options.dart';
 
-void main() {
+Future<void> setUpCrashReporting() async {
+  if (kIsWeb) return;
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    await FirebaseCrashlytics.instance
+        .setCrashlyticsCollectionEnabled(!kDebugMode);
+    FlutterError.onError =
+        FirebaseCrashlytics.instance.recordFlutterFatalError;
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+  } catch (e) {
+    debugPrint('Crash reporting unavailable: $e');
+  }
+}
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (kIsWeb) databaseFactory = databaseFactoryFfiWeb;
+  await setUpCrashReporting();
 
   final api = ApiClient(
     tokens: SecureTokenStore(),

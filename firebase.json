@@ -1,0 +1,1 @@
+{"flutter":{"platforms":{"android":{"default":{"projectId":"vesper-insyte","appId":"1:220157076468:android:b6a38aa6a070839ae80fa1","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"vesper-insyte","configurations":{"android":"1:220157076468:android:b6a38aa6a070839ae80fa1","ios":"1:220157076468:ios:1db4dea164e54767e80fa1"}}}}}}
