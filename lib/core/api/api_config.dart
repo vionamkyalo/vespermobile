@@ -3,7 +3,7 @@ class ApiConfig {
 
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://relive-mummified-jovial.ngrok-free.dev',
+    defaultValue: 'https://vesper-8f787b421f31.herokuapp.com',
   );
 
   static const String testUserId = String.fromEnvironment('TEST_USER_ID');

@@ -1,10 +1,7 @@
 import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
 import '../../core/api/api_client.dart';
-import 'data/zone_seed.dart';
 
 class FormZone {
   const FormZone({
@@ -121,15 +118,10 @@ class InspectionFormRepository {
     }
   }
 
-  static List<FormZone> _merge(List<FormZone> server) {
-    final byName = <String, FormZone>{
-      for (final z in kZoneSeed) z.name.toLowerCase(): z,
-    };
-    for (final z in server) {
-      byName[z.name.toLowerCase()] = z;
-    }
-    return byName.values.toList()..sort((a, b) => a.name.compareTo(b.name));
-  }
+  static List<FormZone> _merge(List<FormZone> zones) => [
+    for (final z in zones)
+      if (!z.isLocalOnly) z,
+  ]..sort((a, b) => a.name.compareTo(b.name));
 
   Future<FormLookups?> refresh() async {
     try {

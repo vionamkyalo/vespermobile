@@ -13,7 +13,6 @@ class ReportsRepository {
     );
   }
 
-  /// zone_id -> zone name
   Future<Map<String, String>> zoneNames() async {
     final data = await _api.get('/zones') as List;
     return {
@@ -30,6 +29,24 @@ class ReportsRepository {
     return data
         .cast<Map<String, dynamic>>()
         .map(InspectionReport.fromJson)
+        .toList();
+  }
+
+  Future<List<ViolationRecord>> violations() async {
+    final data =
+        await _api.get('/violation-reports', query: {'limit': '200'}) as List;
+    return data
+        .cast<Map<String, dynamic>>()
+        .map(ViolationRecord.fromJson)
+        .toList();
+  }
+
+  Future<List<CatchCheckRecord>> catchChecks() async {
+    final data =
+        await _api.get('/catch-checks', query: {'limit': '200'}) as List;
+    return data
+        .cast<Map<String, dynamic>>()
+        .map(CatchCheckRecord.fromJson)
         .toList();
   }
 }

@@ -11,8 +11,8 @@ import '../inspection_form_repository.dart';
 
 enum InspectionType {
   site('site', 'Site'),
-  landingSite('landing_site', 'Landing site'),
-  zone('zone', 'Zone');
+  zone('zone', 'Zone'),
+  landingSite('landing_site', 'Landing Site');
 
   const InspectionType(this.api, this.label);
   final String api;

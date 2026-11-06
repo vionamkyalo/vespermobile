@@ -1,43 +1,75 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
+
+import '../../../core/sync/repositories/offline_queue_repository.dart';
+import '../../../core/sync/services/sync_service.dart';
+import '../../auth/viewmodel/sign_in_view_model.dart';
 import '../models/user_profile.dart';
 
 class ProfileViewModel extends ChangeNotifier {
   ProfileViewModel({
-    UserProfile? user = UserProfile.placeholder,
-    int waitingCount = 3,
-    String? lastTry = '04:34',
-  }) : _user = user,
-       _waitingCount = waitingCount,
-       _lastTry = lastTry;
+    required this._session,
+    OfflineQueueRepository? queue,
+    Stream<SyncEvent>? syncEvents,
+  }) : _queue = queue ?? OfflineQueueRepository() {
+    _session.addListener(_onSessionChanged);
+    _syncSubscription = syncEvents?.listen((_) => refreshWaiting());
+    unawaited(refreshWaiting());
+  }
 
-  UserProfile? _user;
-  int _waitingCount;
-  String? _lastTry;
+  final SignInViewModel _session;
+  final OfflineQueueRepository _queue;
+  StreamSubscription<SyncEvent>? _syncSubscription;
 
-  UserProfile? get user => _user;
+  int _waitingCount = 0;
+  bool _disposed = false;
+
+  UserProfile? get user {
+    final signedIn = _session.user;
+    return signedIn == null ? null : UserProfile.fromUser(signedIn);
+  }
+
   int get waitingCount => _waitingCount;
 
-  String get waitingSummary {
-    if (_waitingCount == 0) return 'Nothing waiting';
-    final lastTry = _lastTry;
-    return lastTry == null
-        ? '$_waitingCount waiting'
-        : '$_waitingCount waiting, Last try $lastTry';
+  String get waitingSummary => switch (_waitingCount) {
+    0 => 'Nothing waiting',
+    1 => '1 report waiting',
+    _ => '$_waitingCount reports waiting',
+  };
+  Future<void> refreshWaiting() async {
+    try {
+      final count = await _queue.waitingCount();
+      if (_disposed || count == _waitingCount) return;
+      _waitingCount = count;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Could not count waiting reports: $e');
+    }
   }
 
-  void setUser(UserProfile? user) {
-    _user = user;
-    notifyListeners();
+  Future<void> signOut() => _session.logout();
+
+  void manageLocation() => unawaited(_openLocationSettings());
+
+  Future<void> _openLocationSettings() async {
+    try {
+      await Geolocator.openAppSettings();
+    } catch (e) {
+      debugPrint('Could not open location settings: $e');
+    }
   }
 
-  void setWaiting({required int count, String? lastTry}) {
-    _waitingCount = count;
-    _lastTry = lastTry;
-    notifyListeners();
+  void _onSessionChanged() {
+    if (!_disposed) notifyListeners();
   }
 
-  Future<void> signOut() async {}
-  void manageLocation() {}
-  void openWaitingReports() {}
+  @override
+  void dispose() {
+    _disposed = true;
+    _session.removeListener(_onSessionChanged);
+    _syncSubscription?.cancel();
+    super.dispose();
+  }
 }
