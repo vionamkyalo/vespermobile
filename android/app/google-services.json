@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "220157076468",
+    "project_id": "vesper-insyte",
+    "storage_bucket": "vesper-insyte.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:220157076468:android:b6a38aa6a070839ae80fa1",
+        "android_client_info": {
+          "package_name": "com.insyte.vesper"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5oiDyNfF8igjcc8BRLN9YafPHWm_Cvlk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

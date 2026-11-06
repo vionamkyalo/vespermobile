@@ -1,4 +1,4 @@
-package com.insyte.insyte_mobile
+package com.insyte.vesper
 
 import io.flutter.embedding.android.FlutterActivity
 
